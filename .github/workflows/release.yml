@@ -32,7 +32,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-${{ matrix.arch }}-artifacts
+          name: ${{ matrix.os }}-artifacts
           path: |
             out/make/deb/**/*.deb
             out/make/rpm/**/*.rpm
