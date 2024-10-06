@@ -7,11 +7,10 @@ on:
 
 jobs:
   releases-matrix:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ linux, windows, darwin ]
-        arch: [ amd64, arm64 ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     permissions:
       contents: write
 
@@ -39,7 +38,6 @@ jobs:
             out/make/rpm/**/*.rpm
             out/make/squirrel.windows/**/*.exe
             out/make/zip/**/**/*.zip
-            out/make/zip/darwin/**/*.zip
             out/make/*.dmg
 
   create-release:
