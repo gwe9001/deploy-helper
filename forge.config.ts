@@ -19,9 +19,12 @@ const config: ForgeConfig = {
       // https://js.electronforge.io/interfaces/_electron_forge_maker_squirrel.InternalOptions.SquirrelWindowsOptions.html
       setupIcon: 'assets/icons/icon.ico',
     }),
-    new MakerZIP({
-      // https://js.electronforge.io/interfaces/_electron_forge_maker_zip.MakerZIPConfig.html
-    }),
+    new MakerZIP(
+      {
+        // https://js.electronforge.io/interfaces/_electron_forge_maker_zip.MakerZIPConfig.html
+      },
+      ['darwin', 'win32'],
+    ),
     new MakerDMG({
       appPath: '', // https://github.com/electron/forge/issues/3712
       icon: 'assets/icons/icon.icns',
