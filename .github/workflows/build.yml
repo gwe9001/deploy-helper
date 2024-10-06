@@ -20,9 +20,6 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Install system dependencies
-        run: chmod +x ./scripts/setup.sh && ./scripts/setup.sh
-
       - name: Install Node dependencies
         run: yarn install
 
