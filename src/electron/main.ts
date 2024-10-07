@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, Menu } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, Menu, screen } from 'electron'
 import electronSquirrelStartup from 'electron-squirrel-startup'
 import { exec, spawn } from 'child_process'
 import path from 'path'
@@ -25,10 +25,12 @@ log.info('Log from the main process')
 let mainWindow
 
 const createWindow = () => {
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width, height } = primaryDisplay.workAreaSize
   mainWindow = new BrowserWindow({
     icon: 'assets/icons/icon.png',
-    width: 800,
-    height: 600,
+    width: Math.min(1024, width * 0.8),
+    height: Math.min(768, height * 0.8),
     frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
