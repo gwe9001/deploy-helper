@@ -7,6 +7,19 @@
       >
     </div>
 
+    <el-form>
+      <el-form-item label="選擇步驟組合">
+        <el-select v-model="selectedCombinationId" placeholder="選擇步驟組合">
+          <el-option
+            v-for="combination in availableStepCombinations"
+            :key="combination.id"
+            :label="combination.name"
+            :value="combination.id"
+          />
+        </el-select>
+      </el-form-item>
+    </el-form>
+
     <!-- Repo 選擇 -->
     <el-form>
       <el-form-item label="選擇庫">
@@ -24,11 +37,7 @@
 
     <!-- 步驟顯示 -->
     <el-steps :active="currentStep" finish-status="success">
-      <el-step
-        v-for="step in selectedProject?.deploymentSteps"
-        :key="step.id"
-        :title="step.name"
-      />
+      <el-step v-for="step in currentSteps" :key="step.id" :title="step.name" />
     </el-steps>
 
     <!-- 當前步驟卡片 -->
@@ -75,6 +84,7 @@ import { ref, computed, watch, reactive, onMounted, onUnmounted } from 'vue'
 import config from '../config'
 import log from 'electron-log/renderer'
 import { ElMessage } from 'element-plus'
+import { Step, StepCombination, Project } from '../config'
 
 const selectedProjectId = computed(() => config.value().selectedProject)
 const selectedProject = computed(() =>
@@ -82,19 +92,53 @@ const selectedProject = computed(() =>
 )
 const selectedEnvironment = computed(() => config.value().selectedEnvironment)
 
-const selectedRepos = ref([])
+const selectedRepos = ref<string[]>([])
 const currentStep = ref(0)
-const inputValues = reactive({})
+const inputValues = reactive<Record<string, Record<string, string>>>({})
 const directoryValue = ref('')
 const output = ref('')
 const asyncData = ref('')
 
-const resetForm = () => {
-  selectedRepos.value = []
-  Object.assign(inputValues, {})
-  currentStep.value = 0
-  output.value = ''
-}
+const selectedCombinationId = ref('')
+
+const availableStepCombinations = computed(() => {
+  return config
+    .value()
+    .stepCombinations.filter(
+      (combination) =>
+        combination.projectId === selectedProjectId.value &&
+        combination.environment === selectedEnvironment.value,
+    )
+})
+
+const currentSteps = computed(() => {
+  const combination = config
+    .value()
+    .stepCombinations.find((c) => c.id === selectedCombinationId.value)
+  if (!combination) return []
+  return combination.steps
+    .map((stepId) => config.value().steps.find((s) => s.id === stepId))
+    .filter(Boolean) as Step[]
+})
+
+const currentStepData = computed(() => currentSteps.value[currentStep.value])
+
+const canExecute = computed(() => {
+  return validateInputs()
+})
+
+watch([selectedProjectId, selectedEnvironment], () => {
+  selectedCombinationId.value = ''
+  resetForm()
+})
+
+watch(selectedCombinationId, () => {
+  resetForm()
+})
+
+watch(selectedRepos, (newRepos) => {
+  updateInputValues(newRepos)
+})
 
 onMounted(() => {
   window.electron.ipcRenderer.on('command-output', (data: string) => {
@@ -112,44 +156,12 @@ onUnmounted(() => {
   window.electron.ipcRenderer.removeAllListeners('command-error')
 })
 
-watch(
-  selectedProject,
-  (newProject) => {
-    if (newProject) {
-      resetForm()
-    }
-  },
-  { immediate: true },
-)
-
-watch(selectedEnvironment, (newEnvironment) => {
-  if (newEnvironment) {
-    resetForm()
-  }
-})
-
-watch(selectedRepos, (newRepos) => {
-  updateInputValues(newRepos)
+const resetForm = () => {
+  selectedRepos.value = []
+  Object.assign(inputValues, {})
   currentStep.value = 0
-})
-
-const currentStepData = computed(() => {
-  return selectedProject.value?.deploymentSteps?.[currentStep.value]
-})
-
-watch(
-  currentStepData,
-  (newStep) => {
-    if (newStep) {
-      directoryValue.value = newStep.hasDirectory ? newStep.directory || '' : ''
-    }
-  },
-  { immediate: true },
-)
-
-const canExecute = computed(() => {
-  return validateInputs()
-})
+  output.value = ''
+}
 
 const validateInputs = () => {
   if (selectedRepos.value.length === 0) return false
@@ -165,6 +177,7 @@ const validateInputs = () => {
     !selectedRepos.value.every(
       (repo) =>
         inputValues[repo] &&
+        currentStepData.value.outputReference &&
         currentStepData.value.outputReference in inputValues[repo] &&
         inputValues[repo][currentStepData.value.outputReference],
     )
@@ -174,7 +187,7 @@ const validateInputs = () => {
   return true
 }
 
-const updateInputValues = (newRepos) => {
+const updateInputValues = (newRepos: string[]) => {
   newRepos.forEach((repo) => {
     if (!inputValues[repo]) {
       inputValues[repo] = {}
@@ -192,11 +205,21 @@ const updateInputValues = (newRepos) => {
   })
 }
 
-const replaceVariables = (command: string, repo: never) => {
+const updateInputValue = (repo: string, field: string, value: string) => {
+  if (!inputValues[repo]) {
+    inputValues[repo] = {}
+  }
+  inputValues[repo][field] = value
+}
+
+const replaceVariables = (
+  command: string,
+  repo: { name: string; path: string },
+) => {
   const variables = {
     ...inputValues[repo.name],
     repoPath: repo.path,
-    projectPath: selectedProject.value.path,
+    projectPath: selectedProject.value?.path,
     tempPath: config.value().tempPath,
     env: selectedEnvironment.value,
     todayString: getCurrentDateYYYYMMDD(),
@@ -215,13 +238,6 @@ function getCurrentDateYYYYMMDD(): string {
   const month = (today.getMonth() + 1).toString().padStart(2, '0')
   const day = today.getDate().toString().padStart(2, '0')
   return `${year}${month}${day}`
-}
-
-const updateInputValue = (repo: string, field: string, value: string) => {
-  if (!inputValues[repo]) {
-    inputValues[repo] = {}
-  }
-  inputValues[repo][field] = value
 }
 
 const executeStep = async () => {
@@ -278,10 +294,7 @@ const executeStep = async () => {
     }
   }
 
-  if (
-    currentStep.value <
-    (selectedProject.value.deploymentSteps?.length ?? 0) - 1
-  ) {
+  if (currentStep.value < currentSteps.value.length - 1) {
     currentStep.value++
   }
 }

@@ -42,13 +42,12 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 
 const hasProjectsAndSteps = computed(() => {
-  const projects = config.value().projects
+  const { projects, steps, stepCombinations } = config.value()
   return (
     projects.length > 0 &&
-    projects.some(
-      (project) =>
-        project.deploymentSteps && project.deploymentSteps.length > 0,
-    )
+    steps.length > 0 &&
+    stepCombinations.length > 0 &&
+    stepCombinations.some((combination) => combination.steps.length > 0)
   )
 })
 
@@ -56,7 +55,15 @@ const handleDeployClick = () => {
   if (hasProjectsAndSteps.value) {
     router.push('/deployment')
   } else {
-    ElMessage.warning('請先在系統設定中添加專案和設置部署步驟。')
+    if (config.value().projects.length === 0) {
+      ElMessage.warning('請先在系統設定中添加至少一個專案。')
+    } else if (config.value().steps.length === 0) {
+      ElMessage.warning('請先在系統設定中添加至少一個部署步驟。')
+    } else if (config.value().stepCombinations.length === 0) {
+      ElMessage.warning('請先在系統設定中創建至少一個步驟組合。')
+    } else {
+      ElMessage.warning('請確保至少一個步驟組合包含部署步驟。')
+    }
   }
 }
 </script>

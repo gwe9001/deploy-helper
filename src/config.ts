@@ -1,15 +1,18 @@
 import { ref } from 'vue'
 import log from 'electron-log/renderer'
+import { migrateToV2 } from './migrations/configMigrations'
 
 export interface Config {
   configVersion: number
-  selectedProject: string
-  selectedEnvironment: string
+  selectedProject: string | null
+  selectedEnvironment: string | null
   gitBashPath: string
   registrySiteUrl: string
   tempPath: string
   projects: Project[]
   environments: string[]
+  steps: Step[]
+  stepCombinations: StepCombination[]
 }
 
 export interface Project {
@@ -22,7 +25,6 @@ export interface Project {
     username: string
     password: string
   }
-  deploymentSteps: Step[]
 }
 
 export interface Repo {
@@ -43,74 +45,71 @@ export interface Step {
   executionMode: 'sync' | 'async'
 }
 
-const INITIAL_CONFIG_VERSION = 1
-const LATEST_CONFIG_VERSION = 1 // 當前最新版本
+export interface StepCombination {
+  id: string
+  name: string
+  steps: string[]
+  projectId: string
+  environment: string
+}
+
+const INITIAL_CONFIG_VERSION = 2
+const LATEST_CONFIG_VERSION = 2 // 更新到新的版本
 
 const defaultConfig = ref<Config>({
-  configVersion: INITIAL_CONFIG_VERSION,
-  selectedProject: '',
-  selectedEnvironment: '',
+  configVersion: LATEST_CONFIG_VERSION,
+  selectedProject: null,
+  selectedEnvironment: null,
   gitBashPath: '',
   registrySiteUrl: '',
   tempPath: '',
   projects: [],
   environments: [],
+  steps: [],
+  stepCombinations: [],
 })
 
-function migrateConfig(config: Config): void {
-  const initialVersion = config.configVersion
+function migrateConfig(config: Config): Config {
+  const initialVersion = config.configVersion || INITIAL_CONFIG_VERSION
   log.debug(`Config migration check. Current version: ${initialVersion}`)
 
-  if (config.configVersion === undefined) {
-    config.configVersion = INITIAL_CONFIG_VERSION
-    log.info('Config version was undefined. Initialized to version 1.')
-  }
+  let updatedConfig = { ...config }
 
-  switch (config.configVersion) {
-    case LATEST_CONFIG_VERSION:
-      log.debug('Config is already up to date')
-      return // 直接返回，不需要further處理
-
-    // 未來的case將在這裡添加
+  switch (initialVersion) {
     case 1:
-    // 當前版本是 1，暫時不需要遷移
-    // 未來版本 2 的遷移邏輯可以放在這裡
-    // config.configVersion = 2;
-    // log.info('Migrated from version 1 to 2');
+      updatedConfig = migrateToV2(updatedConfig)
     // 繼續執行下一個 case
 
-    // case 2:
-    //   // 版本 2 到 3 的遷移邏輯
-    //   // config.configVersion = 3;
-    //   // log.info('Migrated from version 2 to 3');
-    //   // 繼續執行下一個 case
+    // 添加更多的 case 來處理未來的版本
 
     default:
-      if (config.configVersion > LATEST_CONFIG_VERSION) {
+      if (initialVersion > LATEST_CONFIG_VERSION) {
         log.warn(
-          `Config version (${config.configVersion}) is newer than the latest known version (${LATEST_CONFIG_VERSION}). No migration performed.`,
+          `Config version (${initialVersion}) is newer than the latest known version (${LATEST_CONFIG_VERSION}). No migration performed.`,
         )
-      } else {
+      } else if (initialVersion < LATEST_CONFIG_VERSION) {
         log.warn(
-          `Unknown config version: ${config.configVersion}. Migrating to latest version.`,
+          `Unknown config version: ${initialVersion}. Migrating to latest version.`,
         )
-        config.configVersion = LATEST_CONFIG_VERSION
+        updatedConfig.configVersion = LATEST_CONFIG_VERSION
         log.info(
-          `Config migrated. Version: ${initialVersion} -> ${config.configVersion}`,
+          `Config migrated. Version: ${initialVersion} -> ${updatedConfig.configVersion}`,
         )
       }
   }
+
+  return updatedConfig
 }
 
 const getLocalConfig = async (): Promise<void> => {
   try {
     const configTemp = await window.electron.ipcRenderer.getStoreValue('config')
     if (configTemp) {
-      Object.assign(defaultConfig.value, configTemp)
+      const migratedConfig = migrateConfig(configTemp)
+      Object.assign(defaultConfig.value, migratedConfig)
     } else {
       log.info('No existing config found. Using default config.')
     }
-    migrateConfig(defaultConfig.value)
     await saveConfig() // 保存可能更新過的配置
   } catch (error) {
     log.error('Error getting local config:', error)
