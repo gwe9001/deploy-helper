@@ -16,7 +16,7 @@
       :closable="false"
       class="project-alert"
     />
-    <el-card v-for="step in steps" :key="step.id" class="step-card">
+    <el-card v-for="(step, index) in steps" :key="step.id" class="step-card">
       <el-form label-width="120px">
         <el-form-item>
           <template #label>
@@ -192,7 +192,23 @@
           />
         </el-form-item>
       </el-form>
-      <el-button @click="removeStep(step.id)" type="danger">移除步驟</el-button>
+      <div class="step-actions">
+        <el-button @click="removeStep(step.id)" type="danger"
+          >移除步驟</el-button
+        >
+        <el-button
+          @click="moveStep(index, 'up')"
+          :disabled="index === 0"
+          type="primary"
+          >上移</el-button
+        >
+        <el-button
+          @click="moveStep(index, 'down')"
+          :disabled="index === steps.length - 1"
+          type="primary"
+          >下移</el-button
+        >
+      </div>
     </el-card>
   </div>
 </template>
@@ -338,6 +354,24 @@ const getPreviousOutputs = (currentStep) => {
   }
   return outputs
 }
+
+const moveStep = (index: number, direction: 'up' | 'down') => {
+  console.log(index, direction)
+  if (direction === 'up' && index > 0) {
+    const temp = steps.value[index]
+    steps.value[index] = steps.value[index - 1]
+    steps.value[index - 1] = temp
+  } else if (direction === 'down' && index < steps.value.length - 1) {
+    const temp = steps.value[index]
+    steps.value[index] = steps.value[index + 1]
+    steps.value[index + 1] = temp
+  }
+
+  // 更新配置並保存
+  selectedProject.value.deploymentSteps = steps.value
+  config.set('projects', config.value().projects)
+  config.save()
+}
 </script>
 
 <style scoped>
@@ -357,5 +391,15 @@ const getPreviousOutputs = (currentStep) => {
 
 .el-button:hover {
   background-color: #007bff;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.step-actions .el-button {
+  margin-left: 10px;
 }
 </style>
