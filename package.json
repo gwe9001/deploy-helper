@@ -1,7 +1,7 @@
 {
   "name": "deploy-helper",
   "productName": "deploy-helper",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Deploy Helper",
   "main": ".vite/build/main.js",
   "scripts": {
