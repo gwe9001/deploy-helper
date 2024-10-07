@@ -239,10 +239,8 @@ const executeStep = async () => {
       inputValues[repo.name] = {}
     }
 
-    const command = replaceVariables(step.command, repo).replaceAll(/\\/g, '/')
-    const directory = step.hasDirectory
-      ? directoryValue.value?.replaceAll(/\\/g, '/')
-      : repo.path?.replaceAll(/\\/g, '/')
+    const command = replaceVariables(step.command, repo)
+    const directory = step.hasDirectory ? directoryValue.value : repo.path
 
     output.value += `步驟 ${step.name}\n執行 ${repo.name}:\n${command}\n\n`
 
