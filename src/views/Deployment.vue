@@ -199,7 +199,7 @@ const replaceVariables = (command: string, repo: never) => {
     projectPath: selectedProject.value.path,
     tempPath: config.value().tempPath,
     env: selectedEnvironment.value,
-    todayString: getCurrentDateYYMMDD(),
+    todayString: getCurrentDateYYYYMMDD(),
   }
 
   log.info(variables)
@@ -209,9 +209,9 @@ const replaceVariables = (command: string, repo: never) => {
   })
 }
 
-function getCurrentDateYYMMDD(): string {
+function getCurrentDateYYYYMMDD(): string {
   const today = new Date()
-  const year = today.getFullYear().toString().slice(-2)
+  const year = today.getFullYear().toString()
   const month = (today.getMonth() + 1).toString().padStart(2, '0')
   const day = today.getDate().toString().padStart(2, '0')
   return `${year}${month}${day}`
