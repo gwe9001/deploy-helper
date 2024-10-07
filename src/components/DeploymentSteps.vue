@@ -16,221 +16,281 @@
       :closable="false"
       class="project-alert"
     />
-    <el-card v-for="step in steps" :key="step.id" class="step-card">
-      <el-form label-width="120px">
-        <el-form-item>
-          <template #label>
-            <el-tooltip content="步驟名稱：用於識別此部署步驟" placement="top">
-              <span>步驟名稱</span>
-            </el-tooltip>
-          </template>
-          <el-input
-            v-model="step.name"
-            @change="updateStep(step)"
-            placeholder="請輸入步驟名稱"
-          />
-        </el-form-item>
 
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="命令：要執行的具體命令，可以包含佔位符如 {version}, {repoPath} 等"
-              placement="top"
-            >
-              <span>命令</span>
-            </el-tooltip>
-          </template>
-          <el-input
-            v-model="step.command"
-            @change="updateStep(step)"
-            placeholder="請輸入命令"
-          >
-            <template #append>
-              <el-dropdown
-                @command="insertVariable($event, step)"
-                @visible-change="
-                  (visible) => handleDropdownVisibleChange(visible, step)
-                "
-              >
-                <el-button type="primary">
-                  插入變量
-                  <el-icon class="el-icon--right">
-                    <arrow-down />
-                  </el-icon>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-for="field in availableFields"
-                      :key="field"
-                      :command="'{' + field + '}'"
-                    >
-                      {{ field }}
-                    </el-dropdown-item>
-                    <el-dropdown-item command="{repoPath}"
-                      >倉庫路徑
-                    </el-dropdown-item>
-                    <el-dropdown-item command="{projectPath}"
-                      >項目路徑
-                    </el-dropdown-item>
-                    <el-dropdown-item command="{tempPath}"
-                      >臨時路徑
-                    </el-dropdown-item>
-                    <el-dropdown-item command="{env}"
-                      >當前環境
-                    </el-dropdown-item>
-                    <el-dropdown-item command="{todayString}"
-                      >今天日期 (YYYYMMDD)
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
+    <VueDraggable v-model="steps" handle=".drag-handle" @end="onDragEnd">
+      <el-card v-for="(step, index) in steps" :key="step.id" class="step-card">
+        <div class="card-header">
+          <div class="drag-handle">
+            <el-icon><Rank /></el-icon>
+          </div>
+          <span>{{ step.name }}</span>
+          <el-button
+            @click="toggleStep(step)"
+            :icon="step.isCollapsed ? ArrowDown : ArrowUp"
+          />
+        </div>
+        <el-collapse-transition>
+          <div v-show="!step.isCollapsed">
+            <el-form label-width="120px">
+              <el-form-item>
+                <template #label>
+                  <el-tooltip
+                    content="步驟名稱：用於識別此部署步驟"
+                    placement="top"
+                  >
+                    <span>步驟名稱</span>
+                  </el-tooltip>
                 </template>
-              </el-dropdown>
-            </template>
-          </el-input>
-        </el-form-item>
+                <el-input
+                  v-model="step.name"
+                  @change="updateStep(step)"
+                  placeholder="請輸入步驟名稱"
+                />
+              </el-form-item>
 
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="執行模式：同步（等待完成）或異步（實時輸出）"
-              placement="top"
-            >
-              <span>執行模式</span>
-            </el-tooltip>
-          </template>
-          <el-select
-            v-model="step.executionMode"
-            @change="updateStep(step)"
-            placeholder="選擇執行模式"
-          >
-            <el-option label="同步" value="sync" />
-            <el-option label="異步" value="async" />
-          </el-select>
-        </el-form-item>
+              <el-form-item>
+                <template #label>
+                  <el-tooltip
+                    content="命令：要執行的具體命令，可以包含佔位符如 {version}, {repoPath} 等"
+                    placement="top"
+                  >
+                    <span>命令</span>
+                  </el-tooltip>
+                </template>
+                <el-input
+                  v-model="step.command"
+                  @change="updateStep(step)"
+                  placeholder="請輸入命令"
+                >
+                  <template #append>
+                    <el-dropdown
+                      @command="insertVariable($event, step)"
+                      @visible-change="
+                        (visible) => handleDropdownVisibleChange(visible, step)
+                      "
+                    >
+                      <el-button type="primary">
+                        插入變量
+                        <el-icon class="el-icon--right">
+                          <arrow-down />
+                        </el-icon>
+                      </el-button>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <el-dropdown-item
+                            v-for="field in availableFields"
+                            :key="field"
+                            :command="'{' + field + '}'"
+                          >
+                            {{ field }}
+                          </el-dropdown-item>
+                          <el-dropdown-item command="{repoPath}"
+                            >倉庫路徑</el-dropdown-item
+                          >
+                          <el-dropdown-item command="{projectPath}"
+                            >項目路徑</el-dropdown-item
+                          >
+                          <el-dropdown-item command="{tempPath}"
+                            >臨時路徑</el-dropdown-item
+                          >
+                          <el-dropdown-item command="{env}"
+                            >當前環境</el-dropdown-item
+                          >
+                          <el-dropdown-item command="{todayString}"
+                            >今天日期 (YYYYMMDD)</el-dropdown-item
+                          >
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </template>
+                </el-input>
+              </el-form-item>
 
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="輸出字段：用於存儲命令輸出結果，可在後續步驟中使用"
-              placement="top"
-            >
-              <span>輸出字段</span>
-            </el-tooltip>
-          </template>
-          <el-switch
-            v-model="step.hasOutputField"
-            @change="toggleField(step, 'outputField')"
-          />
-          <el-input
-            v-if="step.hasOutputField"
-            v-model="step.outputField"
-            @change="updateStep(step)"
-            placeholder="請輸入輸出字段"
-          />
-        </el-form-item>
+              <el-form-item>
+                <template #label>
+                  <el-tooltip
+                    content="執行模式：同步（等待完成）或異步（實時輸出）"
+                    placement="top"
+                  >
+                    <span>執行模式</span>
+                  </el-tooltip>
+                </template>
+                <el-select
+                  v-model="step.executionMode"
+                  @change="updateStep(step)"
+                  placeholder="選擇執行模式"
+                >
+                  <el-option label="同步" value="sync" />
+                  <el-option label="異步" value="async" />
+                </el-select>
+              </el-form-item>
 
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="引用前步輸出：選擇要引用的先前步驟輸出字段，用於當前步驟的處理"
-              placement="top"
-            >
-              <span>引用前步輸出</span>
-            </el-tooltip>
-          </template>
-          <el-tooltip
-            :content="
-              !hasPreviousOutputs(step) ? '沒有可用的輸出字段可供引用' : ''
-            "
-            placement="top"
-            :disabled="hasPreviousOutputs(step)"
-          >
-            <el-switch
-              v-model="step.hasOutputReference"
-              @change="toggleOutputReference(step)"
-              :disabled="!hasPreviousOutputs(step)"
-            >
-            </el-switch>
-          </el-tooltip>
-          <template v-if="step.hasOutputReference">
-            <el-select
-              v-model="step.outputReference"
-              @change="updateStep(step)"
-              placeholder="選擇輸出字段"
-            >
-              <el-option
-                v-for="output in getPreviousOutputs(step)"
-                :key="output"
-                :label="output"
-                :value="output"
-              />
-            </el-select>
-            <div class="form-item-hint">
-              選擇先前步驟的輸出字段以用於當前步驟
+              <el-form-item>
+                <template #label>
+                  <el-tooltip
+                    content="輸出字段：用於存儲命令輸出結果，可在後續步驟中使用"
+                    placement="top"
+                  >
+                    <span>輸出字段</span>
+                  </el-tooltip>
+                </template>
+                <el-switch
+                  v-model="step.hasOutputField"
+                  @change="toggleField(step, 'outputField')"
+                />
+                <el-input
+                  v-if="step.hasOutputField"
+                  v-model="step.outputField"
+                  @change="updateStep(step)"
+                  placeholder="請輸入輸出字段"
+                />
+              </el-form-item>
+
+              <el-form-item>
+                <template #label>
+                  <el-tooltip
+                    content="引用前步輸出：選擇要引用的先前步驟輸出字段，用於當前步驟的處理"
+                    placement="top"
+                  >
+                    <span>引用前步輸出</span>
+                  </el-tooltip>
+                </template>
+                <el-tooltip
+                  :content="
+                    !hasPreviousOutputs(step)
+                      ? '沒有可用的輸出字段可供引用'
+                      : ''
+                  "
+                  placement="top"
+                  :disabled="hasPreviousOutputs(step)"
+                >
+                  <el-switch
+                    v-model="step.hasOutputReference"
+                    @change="toggleOutputReference(step)"
+                    :disabled="!hasPreviousOutputs(step)"
+                  >
+                  </el-switch>
+                </el-tooltip>
+                <template v-if="step.hasOutputReference">
+                  <el-select
+                    v-model="step.outputReference"
+                    @change="updateStep(step)"
+                    placeholder="選擇輸出字段"
+                  >
+                    <el-option
+                      v-for="output in getPreviousOutputs(step)"
+                      :key="output"
+                      :label="output"
+                      :value="output"
+                    />
+                  </el-select>
+                  <div class="form-item-hint">
+                    選擇先前步驟的輸出字段以用於當前步驟
+                  </div>
+                </template>
+              </el-form-item>
+
+              <el-form-item>
+                <template #label>
+                  <el-tooltip
+                    content="執行目錄：指定命令執行的目錄，預設是儲存庫路徑"
+                    placement="top"
+                  >
+                    <span>執行目錄</span>
+                  </el-tooltip>
+                </template>
+                <el-switch
+                  v-model="step.hasDirectory"
+                  @change="toggleField(step, 'directory')"
+                />
+                <el-input
+                  v-if="step.hasDirectory"
+                  v-model="step.directory"
+                  @change="updateStep(step)"
+                  placeholder="請輸入目錄"
+                />
+              </el-form-item>
+            </el-form>
+            <div class="step-actions">
+              <el-button @click="removeStep(step.id)" type="danger"
+                >移除步驟</el-button
+              >
             </div>
-          </template>
-        </el-form-item>
-
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="執行目錄：指定命令執行的目錄，預設是儲存庫路徑"
-              placement="top"
-            >
-              <span>執行目錄</span>
-            </el-tooltip>
-          </template>
-          <el-switch
-            v-model="step.hasDirectory"
-            @change="toggleField(step, 'directory')"
-          />
-          <el-input
-            v-if="step.hasDirectory"
-            v-model="step.directory"
-            @change="updateStep(step)"
-            placeholder="請輸入目錄"
-          />
-        </el-form-item>
-      </el-form>
-      <el-button @click="removeStep(step.id)" type="danger">移除步驟</el-button>
-    </el-card>
+          </div>
+        </el-collapse-transition>
+      </el-card>
+    </VueDraggable>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import config from '../config'
-import { ArrowDown } from '@element-plus/icons-vue'
+import { VueDraggable } from 'vue-draggable-plus'
 import { ElMessage } from 'element-plus'
+import { ArrowDown, ArrowUp, Rank } from '@element-plus/icons-vue'
+import config from '../config'
+
+interface Step {
+  id: string
+  name: string
+  command: string
+  executionMode: 'sync' | 'async'
+  hasOutputField: boolean
+  outputField?: string
+  hasOutputReference: boolean
+  outputReference?: string
+  hasDirectory: boolean
+  directory?: string
+  isCollapsed: boolean
+}
+
+interface Project {
+  id: string
+  name: string
+  deploymentSteps: Step[]
+}
 
 const selectedProjectId = computed(() => config.value().selectedProject || '')
-const selectedProject = computed(() =>
-  config.value().projects.find((p) => p.id === selectedProjectId.value),
+const selectedProject = computed<Project | undefined>(() =>
+  config
+    .value()
+    .projects.find((p: Project) => p.id === selectedProjectId.value),
 )
-const steps = ref([])
+const steps = ref<Step[]>([])
 const currentEditingStepId = ref<string | null>(null)
 
 onMounted(() => {
   if (selectedProject.value) {
-    steps.value = selectedProject.value.deploymentSteps || []
+    steps.value =
+      selectedProject.value.deploymentSteps.map((step) => ({
+        ...step,
+        isCollapsed: false,
+      })) || []
   }
 })
 
 watch(selectedProjectId, (newProjectId) => {
   if (newProjectId) {
-    steps.value = selectedProject.value?.deploymentSteps || []
+    steps.value = (selectedProject.value?.deploymentSteps || []).map(
+      (step) => ({
+        ...step,
+        isCollapsed: false,
+      }),
+    )
   } else {
     steps.value = []
   }
 })
 
-const updateStep = (step) => {
+const updateStep = (step: Step) => {
   const index = steps.value.findIndex((s) => s.id === step.id)
   if (index !== -1) {
     steps.value[index] = step
-    selectedProject.value.deploymentSteps = steps.value
-    config.set('projects', config.value().projects)
-    config.save()
+    if (selectedProject.value) {
+      selectedProject.value.deploymentSteps = steps.value
+      config.set('projects', config.value().projects)
+      config.save()
+    }
   }
 }
 
@@ -240,7 +300,7 @@ const addStep = () => {
     return
   }
 
-  const newStep = {
+  const newStep: Step = {
     id: Date.now().toString(),
     name: '新建步驟',
     command: '',
@@ -248,22 +308,29 @@ const addStep = () => {
     hasOutputField: false,
     hasOutputReference: false,
     hasDirectory: false,
+    isCollapsed: false,
   }
   steps.value.push(newStep)
-  selectedProject.value.deploymentSteps = steps.value
-  config.set('projects', config.value().projects)
-  config.save()
+  if (selectedProject.value) {
+    selectedProject.value.deploymentSteps = steps.value
+    config.set('projects', config.value().projects)
+    config.save()
+  }
 }
 
-const removeStep = (id) => {
+const removeStep = (id: string) => {
   steps.value = steps.value.filter((s) => s.id !== id)
-  selectedProject.value.deploymentSteps = steps.value
-  config.set('projects', config.value().projects)
-  config.save()
+  if (selectedProject.value) {
+    selectedProject.value.deploymentSteps = steps.value
+    config.set('projects', config.value().projects)
+    config.save()
+  }
 }
 
-const toggleField = (step, field) => {
-  if (step[`has${field.charAt(0).toUpperCase() + field.slice(1)}`]) {
+const toggleField = (step: Step, field: 'outputField' | 'directory') => {
+  if (
+    step[`has${field.charAt(0).toUpperCase() + field.slice(1)}` as keyof Step]
+  ) {
     step[field] = ''
   } else {
     delete step[field]
@@ -285,7 +352,7 @@ const availableFields = computed(() => {
   return Array.from(fields)
 })
 
-const insertVariable = (variable: string, step: never) => {
+const insertVariable = (variable: string, step: Step) => {
   const input = document.querySelector(
     `input[value="${step.command}"]`,
   ) as HTMLInputElement | null
@@ -305,7 +372,7 @@ const insertVariable = (variable: string, step: never) => {
   }
 }
 
-const handleDropdownVisibleChange = (visible: boolean, step: never) => {
+const handleDropdownVisibleChange = (visible: boolean, step: Step) => {
   if (visible) {
     currentEditingStepId.value = step.id
   } else {
@@ -313,7 +380,7 @@ const handleDropdownVisibleChange = (visible: boolean, step: never) => {
   }
 }
 
-const toggleOutputReference = (step) => {
+const toggleOutputReference = (step: Step) => {
   if (step.hasOutputReference) {
     step.outputReference = ''
   } else {
@@ -322,12 +389,12 @@ const toggleOutputReference = (step) => {
   updateStep(step)
 }
 
-const hasPreviousOutputs = (currentStep) => {
+const hasPreviousOutputs = (currentStep: Step) => {
   return getPreviousOutputs(currentStep).length > 0
 }
 
-const getPreviousOutputs = (currentStep) => {
-  const outputs = []
+const getPreviousOutputs = (currentStep: Step) => {
+  const outputs: string[] = []
   for (const step of steps.value) {
     if (step.id === currentStep.id) {
       break
@@ -337,6 +404,19 @@ const getPreviousOutputs = (currentStep) => {
     }
   }
   return outputs
+}
+
+const onDragEnd = () => {
+  if (selectedProject.value) {
+    selectedProject.value.deploymentSteps = steps.value
+    config.set('projects', config.value().projects)
+    config.save()
+  }
+}
+
+const toggleStep = (step: Step) => {
+  step.isCollapsed = !step.isCollapsed
+  updateStep(step)
 }
 </script>
 
@@ -357,5 +437,46 @@ const getPreviousOutputs = (currentStep) => {
 
 .el-button:hover {
   background-color: #007bff;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.step-actions .el-button {
+  margin-left: 10px;
+}
+
+.drag-handle {
+  cursor: move;
+  padding: 5px;
+  margin-right: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.drag-handle:hover {
+  background-color: #e0e0e0;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.card-header span {
+  font-weight: bold;
+  flex-grow: 1;
+  margin-left: 10px;
+}
+
+.form-item-hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
 }
 </style>
