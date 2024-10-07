@@ -109,7 +109,7 @@
               <el-form-item>
                 <template #label>
                   <el-tooltip
-                    content="執行模式：同步（等待完成）或異步（實時輸出）"
+                    content="執行模式：同步（使用exec，等待命令完成後顯示結果）或異步（使用spawn，即時顯示執行過程）"
                     placement="top"
                   >
                     <span>執行模式</span>
@@ -120,8 +120,8 @@
                   @change="updateStep(step)"
                   placeholder="選擇執行模式"
                 >
-                  <el-option label="同步" value="sync" />
-                  <el-option label="異步" value="async" />
+                  <el-option label="同步 (exec)" value="sync" />
+                  <el-option label="異步 (spawn)" value="async" />
                 </el-select>
               </el-form-item>
 
