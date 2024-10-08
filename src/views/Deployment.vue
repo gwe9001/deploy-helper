@@ -141,6 +141,10 @@ watch(selectedRepos, (newRepos) => {
 })
 
 onMounted(() => {
+  // 預設選擇第一個組合
+  if (availableStepCombinations.value.length > 0) {
+    selectedCombinationId.value = availableStepCombinations.value[0].id
+  }
   window.electron.ipcRenderer.on('command-output', (data: string) => {
     output.value += data
     asyncData.value += data
