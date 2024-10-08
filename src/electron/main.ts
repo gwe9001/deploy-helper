@@ -5,11 +5,17 @@ import path from 'path'
 import Store from 'electron-store'
 import { enable, initialize } from '@electron/remote/main'
 import log from 'electron-log/main'
+import { updateElectronApp } from 'update-electron-app'
 
 const CONFIG_GIT_BASH_PATH = 'config.gitBashPath'
 const COMMAND_OUTPUT = 'command-output'
 const COMMAND_ERROR = 'command-error'
 const isDev = !app.isPackaged
+
+// handle auto updates
+if (!isDev) {
+  updateElectronApp()
+}
 
 if (electronSquirrelStartup) {
   app.quit()
