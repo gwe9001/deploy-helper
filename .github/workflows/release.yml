@@ -32,7 +32,7 @@ jobs:
           python-version: '3.11.4'
 
       - name: Install Node dependencies
-        run: yarn install
+        run: npm ci
 
       - name: setup windows certificate
         if: startsWith(matrix.os, 'windows-')
