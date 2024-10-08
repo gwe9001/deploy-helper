@@ -17,13 +17,21 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({
       // https://js.electronforge.io/interfaces/_electron_forge_maker_squirrel.InternalOptions.SquirrelWindowsOptions.html
+      // automaticallySelectCertificate: true,
+      // timestampServer: 'http://timestamp.comodoca.com',
       setupIcon: 'assets/icons/icon.ico',
+      windowsSign: {
+        certificateFile: process.env.WINDOWS_CERTIFICATE_PATH,
+        certificatePassword: process.env.WINDOWS_CERTIFICATE_PASSWORD,
+      },
+      iconUrl:
+        'https://raw.githubusercontent.com/gwe9001/deploy-helper/refs/heads/main/assets/icons/icon.ico',
     }),
     new MakerZIP(
       {
         // https://js.electronforge.io/interfaces/_electron_forge_maker_zip.MakerZIPConfig.html
       },
-      ['darwin', 'win32'],
+      ['darwin'],
     ),
     new MakerDMG({
       appPath: '', // https://github.com/electron/forge/issues/3712
@@ -85,6 +93,19 @@ const config: ForgeConfig = {
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
+  ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'gwe9001',
+          name: 'deploy-helper',
+        },
+        prerelease: true,
+        generateReleaseNotes: true,
+      },
+    },
   ],
 }
 

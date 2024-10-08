@@ -1,7 +1,7 @@
 {
   "name": "deploy-helper",
   "productName": "deploy-helper",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Deploy Helper",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -19,14 +19,15 @@
     "@electron-forge/maker-rpm": "^7.5.0",
     "@electron-forge/maker-squirrel": "^7.5.0",
     "@electron-forge/maker-zip": "^7.5.0",
+    "@electron-forge/publisher-github": "^7.5.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.5.0",
     "@electron-forge/plugin-fuses": "^7.5.0",
     "@electron-forge/plugin-vite": "^7.5.0",
     "@electron/fuses": "^1.8.0",
     "@element-plus/icons-vue": "^2.3.1",
     "@eslint/js": "^9.12.0",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
     "@vitejs/plugin-vue": "^5.1.4",
     "electron": "32.1.2",
     "electron-squirrel-startup": "^1.0.1",
@@ -51,11 +52,9 @@
   },
   "keywords": [],
   "author": {
-    "name": "Jim Wang",
-    "email": "gwe9001@gmail.com"
+    "name": "Jim Wang"
   },
   "license": "MIT",
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "electron-log": "^5.2.0",
