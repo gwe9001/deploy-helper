@@ -12,7 +12,7 @@ cd deploy-helper
 2. Install dependencies:
 
 ```bash
-yarn install
+npm install
 ```
 
 ### Development
@@ -20,7 +20,7 @@ yarn install
 Run the application in development mode:
 
 ```bash
-yarn start
+npm start
 ```
 
 This will start the Electron application using electron-forge.
@@ -30,13 +30,13 @@ This will start the Electron application using electron-forge.
 Package the application:
 
 ```bash
-yarn package
+npm package
 ```
 
 Create distributable formats:
 
 ```bash
-yarn make
+npm make
 ```
 
 ## License
