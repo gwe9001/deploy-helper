@@ -34,18 +34,18 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      - name: setup windows certificate
-        if: startsWith(matrix.os, 'windows-')
-        run: |
-          $bytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE }}")
-          [IO.File]::WriteAllBytes("certificate.pfx", $bytes)
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+#      - name: setup windows certificate
+#        if: startsWith(matrix.os, 'windows-')
+#        run: |
+#          $bytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE }}")
+#          [IO.File]::WriteAllBytes("certificate.pfx", $bytes)
+#        env:
+#          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
 
       - name: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WINDOWS_CERTIFICATE_PATH: ./certificate.pfx
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+#          WINDOWS_CERTIFICATE_PATH: ./certificate.pfx
+#          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: npm run publish
 

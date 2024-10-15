@@ -17,12 +17,12 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({
       // https://js.electronforge.io/interfaces/_electron_forge_maker_squirrel.InternalOptions.SquirrelWindowsOptions.html
-      // automaticallySelectCertificate: true,
       // timestampServer: 'http://timestamp.comodoca.com',
+      //   certificateFile: process.env.WINDOWS_CERTIFICATE_PATH,
+      //   certificatePassword: process.env.WINDOWS_CERTIFICATE_PASSWORD,
       setupIcon: 'assets/icons/icon.ico',
       windowsSign: {
-        certificateFile: process.env.WINDOWS_CERTIFICATE_PATH,
-        certificatePassword: process.env.WINDOWS_CERTIFICATE_PASSWORD,
+        automaticallySelectCertificate: true,
       },
       iconUrl:
         'https://raw.githubusercontent.com/gwe9001/deploy-helper/refs/heads/main/assets/icons/icon.ico',
