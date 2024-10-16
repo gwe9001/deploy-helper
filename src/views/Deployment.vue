@@ -73,7 +73,9 @@
           執行
         </el-button>
         <div class="right-buttons">
-          <el-button @click="resetForm" type="info">重設</el-button>
+          <el-button @click="resetForm" type="info" :disabled="currentStep == 0"
+            >重設</el-button
+          >
           <el-button
             v-if="currentStep > 0"
             @click="previousStep"
@@ -319,6 +321,7 @@ const executeStep = async () => {
     } catch (error: any) {
       output.value += `[${repo.name}] 錯誤: ${error.message}\n\n`
     }
+    nextStep()
   }
 }
 
