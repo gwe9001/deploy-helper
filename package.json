@@ -1,7 +1,7 @@
 {
   "name": "deploy-helper",
   "productName": "deploy-helper",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Deploy Helper",
   "repository": "github:gwe9001/deploy-helper",
   "main": ".vite/build/main.js",

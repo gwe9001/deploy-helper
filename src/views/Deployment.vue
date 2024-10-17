@@ -318,11 +318,11 @@ const executeStep = async () => {
         }
         output.value += `\n[${repo.name}] 命令完成成功\n\n`
       }
-    } catch (error: any) {
+    } catch (error: never) {
       output.value += `[${repo.name}] 錯誤: ${error.message}\n\n`
     }
-    nextStep()
   }
+  nextStep()
 }
 
 const nextStep = () => {
