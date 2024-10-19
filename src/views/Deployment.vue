@@ -25,7 +25,7 @@
     </el-form>
 
     <el-form>
-      <el-form-item label="選擇庫">
+      <el-form-item label="選擇Repo">
         <el-checkbox-group v-model="selectedRepos">
           <el-checkbox
             v-for="repo in selectedProject?.repos"
@@ -67,7 +67,7 @@
         <el-button
           @click="executeStep"
           type="primary"
-          :disabled="!canExecute"
+          :disabled="!canExecute || execution"
           class="execute-button"
         >
           執行
@@ -87,10 +87,13 @@
             v-if="currentStep < currentSteps.length - 1"
             @click="nextStep"
             type="primary"
+            :disabled="execution"
           >
             下一步
           </el-button>
-          <el-button v-else @click="finish" type="success">完成</el-button>
+          <el-button v-else @click="finish" type="success" :disabled="execution"
+            >完成</el-button
+          >
         </div>
       </div>
     </el-card>
@@ -136,6 +139,8 @@ const output = ref('')
 const asyncData = ref('')
 // 選擇的步驟組合 ID
 const selectedCombinationId = ref('')
+// 執行中
+const execution = ref(false)
 
 // 可用的步驟組合
 const availableStepCombinations = computed<StepCombination[]>(() =>
@@ -167,7 +172,12 @@ const currentStepData = computed<Step | undefined>(
 
 // 是否可以執行目前步驟
 const canExecute = computed(() => {
-  if (!selectedProject.value || !currentStepData.value) return false
+  if (
+    !selectedProject.value ||
+    !currentStepData.value ||
+    !selectedRepos.value.length
+  )
+    return false
   if (!validateInputs()) return false
   return true
 })
@@ -274,55 +284,67 @@ function getCurrentDateYYYYMMDD(): string {
 }
 
 const executeStep = async () => {
-  if (!currentStepData.value || !selectedProject.value) return
-
-  const step = currentStepData.value
-  const repos = selectedProject.value.repos.filter((r) =>
-    selectedRepos.value.includes(r.name),
-  )
-
-  output.value = ''
-
-  for (const repo of repos) {
-    if (!inputValues[repo.name]) {
-      inputValues[repo.name] = {}
+  try {
+    execution.value = true
+    if (!currentStepData.value || !selectedProject.value) {
+      return
     }
-    const command = replaceVariables(step.command, repo)
-    const directory = step.hasDirectory ? directoryValue.value : repo.path
 
-    output.value += `步驟 ${step.name}\n執行 ${repo.name}:\n${command}\n\n`
+    if (!selectedRepos.value.length) {
+      ElMessage.warning('請選擇至少一個Repo。')
+      return
+    }
 
-    try {
-      if (step.executionMode === 'sync') {
-        const result = await window.electron.ipcRenderer.invoke(
-          'execute-command',
-          command,
-          directory,
-        )
-        output.value += `[${repo.name}] ${result}\n\n`
-        if (step.outputField) {
-          inputValues[repo.name][step.outputField] = result.trim()
-        }
-      } else {
-        asyncData.value = ''
-        let split = command.split(' ')
+    const step = currentStepData.value
+    const repos = selectedProject.value.repos.filter((r) =>
+      selectedRepos.value.includes(r.name),
+    )
 
-        await window.electron.ipcRenderer.invoke(
-          'execute-command-stream',
-          split[0],
-          split.slice(1),
-          directory,
-        )
-        if (step.outputField) {
-          inputValues[repo.name][step.outputField] = asyncData.value.trim()
-        }
-        output.value += `\n[${repo.name}] 命令完成成功\n\n`
+    output.value = ''
+
+    for (const repo of repos) {
+      if (!inputValues[repo.name]) {
+        inputValues[repo.name] = {}
       }
-    } catch (error: never) {
-      output.value += `[${repo.name}] 錯誤: ${error.message}\n\n`
+      const command = replaceVariables(step.command, repo)
+      const directory = step.hasDirectory ? directoryValue.value : repo.path
+
+      output.value += `步驟 ${step.name}\n執行 ${repo.name}:\n${command}\n\n`
+
+      try {
+        if (step.executionMode === 'sync') {
+          const result = await window.electron.ipcRenderer.invoke(
+            'execute-command',
+            command,
+            directory,
+          )
+          output.value += `[${repo.name}] ${result}\n\n`
+          if (step.outputField) {
+            inputValues[repo.name][step.outputField] = result.trim()
+          }
+        } else {
+          asyncData.value = ''
+          let split = command.split(' ')
+
+          await window.electron.ipcRenderer.invoke(
+            'execute-command-stream',
+            split[0],
+            split.slice(1),
+            directory,
+          )
+          if (step.outputField) {
+            inputValues[repo.name][step.outputField] = asyncData.value.trim()
+          }
+          output.value += `\n[${repo.name}] 命令完成成功\n\n`
+        }
+      } catch (error: never) {
+        output.value += `[${repo.name}] 錯誤: ${error.message}\n\n`
+      }
     }
+    nextStep()
+  } finally {
+    execution.value = false
   }
-  nextStep()
 }
 
 const nextStep = () => {
