@@ -32,3 +32,15 @@ export function migrateToV2(config: Config): Config {
   log.info('Migrated from version 1 to 2')
   return updatedConfig
 }
+
+export function migrateToV3(config: Config): Config {
+  const updatedConfig = { ...config }
+
+  updatedConfig.steps.forEach((step) => {
+    step.shellType = 'bash'
+  })
+
+  updatedConfig.configVersion = 3
+  log.info('Migrated from version 2 to 3')
+  return updatedConfig
+}
