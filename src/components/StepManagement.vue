@@ -8,6 +8,7 @@
       <el-table-column prop="name" label="步驟名稱" />
       <el-table-column prop="command" label="命令" />
       <el-table-column prop="executionMode" label="執行模式" />
+      <el-table-column prop="shellType" label="Shell 類型" />
       <el-table-column label="操作" width="200">
         <template #default="scope">
           <el-button @click="editStep(scope.row)" type="primary" size="small"
@@ -158,6 +159,20 @@
             style="margin-top: 10px"
           />
         </el-form-item>
+        <el-form-item>
+          <template #label>
+            <el-tooltip
+              content="Shell 類型：選擇執行命令的 shell 環境"
+              placement="top"
+            >
+              <span>Shell 類型</span>
+            </el-tooltip>
+          </template>
+          <el-select v-model="editingStep.shellType">
+            <el-option label="Bash" value="bash" />
+            <el-option label="PowerShell" value="powershell" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -189,6 +204,7 @@ const addStep = () => {
     hasOutputField: false,
     hasOutputReference: false,
     hasDirectory: false,
+    shellType: 'bash',
   }
   dialogVisible.value = true
 }

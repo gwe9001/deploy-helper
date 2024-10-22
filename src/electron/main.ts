@@ -82,12 +82,18 @@ store.set(CONFIG_GIT_BASH_PATH, gitBashPath)
 async function executeCommand(
   command: string,
   directory: string,
+  shell: string,
 ): Promise<string> {
-  gitBashPath = store.get(CONFIG_GIT_BASH_PATH) || defaultGitBashPath
-  log.info(gitBashPath)
+  let shellPath: string
+  if (shell === 'powershell') {
+    shellPath = 'powershell.exe'
+  } else {
+    shellPath = store.get(CONFIG_GIT_BASH_PATH) || defaultGitBashPath
+  }
+  log.info(shellPath)
 
   return new Promise((resolve, reject) => {
-    exec(command, { shell: gitBashPath, cwd: directory }, (error, stdout) => {
+    exec(command, { shell: shellPath, cwd: directory }, (error, stdout) => {
       if (error) {
         reject(error)
         return
@@ -101,13 +107,19 @@ async function executeCommandStream(
   command: string,
   args: string[],
   directory: string,
+  shell: string,
 ): Promise<void> {
-  gitBashPath = store.get(CONFIG_GIT_BASH_PATH) || defaultGitBashPath
-  log.info(gitBashPath)
+  let shellPath: string
+  if (shell === 'powershell') {
+    shellPath = 'powershell.exe'
+  } else {
+    shellPath = store.get(CONFIG_GIT_BASH_PATH) || defaultGitBashPath
+  }
+  log.info(shellPath)
 
   return new Promise((resolve, reject) => {
     const process = spawn(command, args, {
-      shell: gitBashPath,
+      shell: shellPath,
       cwd: directory,
     })
 
@@ -188,15 +200,18 @@ app.whenReady().then(() => {
     await shell.showItemInFolder(path)
   })
 
-  ipcMain.handle('execute-command', async (event, command, directory) => {
-    return await executeCommand(command, directory)
-  })
+  ipcMain.handle(
+    'execute-command',
+    async (event, command, directory, shell) => {
+      return await executeCommand(command, directory, shell)
+    },
+  )
 
   ipcMain.handle(
     'execute-command-stream',
-    async (event, command, args, directory) => {
+    async (event, command, args, directory, shell) => {
       try {
-        await executeCommandStream(command, args, directory)
+        await executeCommandStream(command, args, directory, shell)
         return 'Command completed successfully'
       } catch (error) {
         log.error('Error:', error)

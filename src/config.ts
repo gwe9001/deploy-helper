@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import log from 'electron-log/renderer'
-import { migrateToV2 } from './migrations/configMigrations'
+import { migrateToV2, migrateToV3 } from './migrations/configMigrations'
 
 export interface Config {
   configVersion: number
@@ -43,6 +43,7 @@ export interface Step {
   hasOutputReference: boolean
   hasDirectory: boolean
   executionMode: 'sync' | 'async'
+  shellType: 'bash' | 'powershell'
 }
 
 export interface StepCombination {
@@ -53,8 +54,8 @@ export interface StepCombination {
   environment: string
 }
 
-const INITIAL_CONFIG_VERSION = 2
-const LATEST_CONFIG_VERSION = 2 // 更新到新的版本
+const INITIAL_CONFIG_VERSION = 3
+const LATEST_CONFIG_VERSION = 3 // 更新到新的版本
 
 const defaultConfig = ref<Config>({
   configVersion: LATEST_CONFIG_VERSION,
@@ -73,29 +74,32 @@ function migrateConfig(config: Config): Config {
   const initialVersion = config.configVersion || INITIAL_CONFIG_VERSION
   log.debug(`Config migration check. Current version: ${initialVersion}`)
 
+  if (initialVersion > LATEST_CONFIG_VERSION) {
+    log.warn(
+      `Config version (${initialVersion}) is newer than the latest known version (${LATEST_CONFIG_VERSION}). No migration performed.`,
+    )
+    return config
+  }
+
   let updatedConfig = { ...config }
 
-  switch (initialVersion) {
-    case 1:
-      updatedConfig = migrateToV2(updatedConfig)
-    // 繼續執行下一個 case
+  const migrationFunctions = [
+    { version: 1, migrate: migrateToV2 },
+    { version: 2, migrate: migrateToV3 },
+    // 可以在這裡添加更多的遷移函數
+  ]
 
-    // 添加更多的 case 來處理未來的版本
+  for (const { version, migrate } of migrationFunctions) {
+    if (initialVersion <= version) {
+      updatedConfig = migrate(updatedConfig)
+    }
+  }
 
-    default:
-      if (initialVersion > LATEST_CONFIG_VERSION) {
-        log.warn(
-          `Config version (${initialVersion}) is newer than the latest known version (${LATEST_CONFIG_VERSION}). No migration performed.`,
-        )
-      } else if (initialVersion < LATEST_CONFIG_VERSION) {
-        log.warn(
-          `Unknown config version: ${initialVersion}. Migrating to latest version.`,
-        )
-        updatedConfig.configVersion = LATEST_CONFIG_VERSION
-        log.info(
-          `Config migrated. Version: ${initialVersion} -> ${updatedConfig.configVersion}`,
-        )
-      }
+  if (initialVersion < LATEST_CONFIG_VERSION) {
+    updatedConfig.configVersion = LATEST_CONFIG_VERSION
+    log.info(
+      `Config migrated. Version: ${initialVersion} -> ${updatedConfig.configVersion}`,
+    )
   }
 
   return updatedConfig

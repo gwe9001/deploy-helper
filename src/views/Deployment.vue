@@ -375,6 +375,7 @@ const executeStep = async () => {
             'execute-command',
             command,
             directory,
+            step.shellType,
           )
           output.value += `[${repo.name}] ${result}\n\n`
           if (step.outputField) {
@@ -389,6 +390,7 @@ const executeStep = async () => {
             split[0],
             split.slice(1),
             directory,
+            step.shellType,
           )
           if (step.outputField) {
             inputValues[repo.name][step.outputField] = asyncData.value.trim()
