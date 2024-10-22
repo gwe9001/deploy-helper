@@ -26,30 +26,38 @@
 
     <el-form>
       <el-form-item label="選擇Repo">
-        <el-checkbox-group v-model="selectedRepos">
-          <el-checkbox
+        <el-select
+          v-model="selectedRepos"
+          multiple
+          filterable
+          placeholder="選擇Repo"
+          style="width: 100%"
+        >
+          <el-option
             v-for="repo in selectedProject?.repos"
             :key="repo.name"
+            :label="repo.name"
             :value="repo.name"
-          >
-            {{ repo.name }}
-            <el-tag
-              :type="
-                repoExecutionStatus[repo.name] === 'success'
-                  ? 'success'
-                  : repoExecutionStatus[repo.name] === 'error'
-                    ? 'danger'
-                    : 'info'
-              "
-              size="small"
-              class="ml-2"
-            >
-              {{ repoExecutionStatus[repo.name] || 'pending' }}
-            </el-tag>
-          </el-checkbox>
-        </el-checkbox-group>
+          />
+        </el-select>
       </el-form-item>
     </el-form>
+
+    <div class="selected-repos">
+      <el-tag
+        v-for="repo in selectedRepos"
+        :key="repo"
+        :type="getTagType(repoExecutionStatus[repo])"
+        closable
+        @close="removeRepo(repo)"
+        class="repo-tag"
+      >
+        {{ repo }}
+        <span class="status-text">{{
+          getStatusText(repoExecutionStatus[repo])
+        }}</span>
+      </el-tag>
+    </div>
 
     <el-steps :active="currentStep" finish-status="success">
       <el-step v-for="step in currentSteps" :key="step.id" :title="step.name" />
@@ -445,6 +453,32 @@ const loginToRegistry = async () => {
   }
 }
 
+const getTagType = (status: string | undefined) => {
+  switch (status) {
+    case 'success':
+      return 'success'
+    case 'error':
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+const getStatusText = (status: string | undefined) => {
+  switch (status) {
+    case 'success':
+      return '成功'
+    case 'error':
+      return '錯誤'
+    default:
+      return '等待中'
+  }
+}
+
+const removeRepo = (repo: string) => {
+  selectedRepos.value = selectedRepos.value.filter((r) => r !== repo)
+}
+
 onMounted(() => {
   // 預設選擇第一個組合
   if (availableStepCombinations.value.length > 0) {
@@ -537,5 +571,23 @@ onUnmounted(() => {
 
 .ml-2 {
   margin-left: 8px;
+}
+
+.selected-repos {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.repo-tag {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+}
+
+.status-text {
+  margin-left: 5px;
+  font-size: 0.8em;
 }
 </style>
