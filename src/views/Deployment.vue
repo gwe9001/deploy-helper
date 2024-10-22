@@ -394,6 +394,9 @@ onMounted(() => {
   if (availableStepCombinations.value.length > 0) {
     selectedCombinationId.value = availableStepCombinations.value[0].id
   }
+  if (selectedProject.value && selectedProject.value.repos.length == 1) {
+    selectedRepos.value.push(selectedProject.value.repos[0].name)
+  }
   window.electron.ipcRenderer.on('command-output', (data: string) => {
     output.value += data
     asyncData.value += data
