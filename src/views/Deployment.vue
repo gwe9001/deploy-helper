@@ -33,6 +33,19 @@
             :value="repo.name"
           >
             {{ repo.name }}
+            <el-tag
+              :type="
+                repoExecutionStatus[repo.name] === 'success'
+                  ? 'success'
+                  : repoExecutionStatus[repo.name] === 'error'
+                    ? 'danger'
+                    : 'info'
+              "
+              size="small"
+              class="ml-2"
+            >
+              {{ repoExecutionStatus[repo.name] || 'pending' }}
+            </el-tag>
           </el-checkbox>
         </el-checkbox-group>
       </el-form-item>
@@ -43,7 +56,13 @@
     </el-steps>
 
     <el-card v-if="currentStepData" class="step-card">
-      <h3>{{ currentStepData.name }}</h3>
+      <div class="step-header">
+        <h3>{{ currentStepData.name }}</h3>
+        <el-progress
+          :percentage="completionPercentage"
+          :status="allReposCompleted ? 'success' : ''"
+        />
+      </div>
 
       <el-form v-for="repo in selectedRepos" :key="repo">
         <el-form-item
@@ -141,6 +160,10 @@ const asyncData = ref('')
 const selectedCombinationId = ref('')
 // 執行中
 const execution = ref(false)
+// Repo執行狀態
+const repoExecutionStatus = reactive<{
+  [repo: string]: 'pending' | 'success' | 'error'
+}>({})
 
 // 可用的步驟組合
 const availableStepCombinations = computed<StepCombination[]>(() =>
@@ -182,6 +205,20 @@ const canExecute = computed(() => {
   return true
 })
 
+const completionPercentage = computed(() => {
+  const totalRepos = selectedRepos.value.length
+  const completedRepos = Object.values(repoExecutionStatus).filter(
+    (status) => status === 'success',
+  ).length
+  return totalRepos === 0 ? 0 : Math.round((completedRepos / totalRepos) * 100)
+})
+
+const allReposCompleted = computed(() => {
+  return selectedRepos.value.every(
+    (repo) => repoExecutionStatus[repo] === 'success',
+  )
+})
+
 const handleCombinationChange = () => {
   resetForm()
 }
@@ -199,6 +236,14 @@ const resetForm = () => {
   directoryValue.value = ''
   for (const repo in inputValues) {
     inputValues[repo] = {}
+  }
+  resetExecutionStatus()
+}
+
+// 重置執行狀態
+const resetExecutionStatus = () => {
+  for (const repo in repoExecutionStatus) {
+    repoExecutionStatus[repo] = 'pending'
   }
 }
 
@@ -236,10 +281,14 @@ watch(selectedRepos, (newRepos, oldRepos) => {
     if (!(repo in inputValues)) {
       inputValues[repo] = {}
     }
+    if (!(repo in repoExecutionStatus)) {
+      repoExecutionStatus[repo] = 'pending'
+    }
   }
   for (const oldRepo of oldRepos) {
     if (!newRepos.includes(oldRepo)) {
       delete inputValues[oldRepo]
+      delete repoExecutionStatus[oldRepo]
     }
   }
 
@@ -303,6 +352,7 @@ const executeStep = async () => {
     output.value = ''
 
     for (const repo of repos) {
+      repoExecutionStatus[repo.name] = 'pending'
       if (!inputValues[repo.name]) {
         inputValues[repo.name] = {}
       }
@@ -337,11 +387,15 @@ const executeStep = async () => {
           }
           output.value += `\n[${repo.name}] 命令完成成功\n\n`
         }
+        repoExecutionStatus[repo.name] = 'success'
       } catch (error: never) {
         output.value += `[${repo.name}] 錯誤: ${error.message}\n\n`
+        repoExecutionStatus[repo.name] = 'error'
       }
     }
-    nextStep()
+    if (allReposCompleted.value) {
+      nextStep()
+    }
   } finally {
     execution.value = false
   }
@@ -350,12 +404,14 @@ const executeStep = async () => {
 const nextStep = () => {
   if (currentStep.value < currentSteps.value.length - 1) {
     currentStep.value++
+    resetExecutionStatus()
   }
 }
 
 const previousStep = () => {
   if (currentStep.value > 0) {
     currentStep.value--
+    resetExecutionStatus()
   }
 }
 
@@ -449,17 +505,37 @@ onUnmounted(() => {
 .el-button:hover {
   background-color: #007bff;
 }
+
 .button-group {
   margin-top: 10px;
   display: flex;
-  justify-content: space-between; /* Distribute space between execute and other buttons */
+  justify-content: space-between;
 }
 
 .execute-button {
-  /*  No specific styling needed here, unless you want to style it differently */
+  /* No specific styling needed here, unless you want to style it differently */
 }
 
 .right-buttons {
-  display: flex; /* Allows buttons within to align horizontally */
+  display: flex;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.step-header h3 {
+  margin: 0;
+}
+
+.el-progress {
+  width: 200px;
+}
+
+.ml-2 {
+  margin-left: 8px;
 }
 </style>
