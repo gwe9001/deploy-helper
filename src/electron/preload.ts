@@ -19,4 +19,5 @@ contextBridge.exposeInMainWorld('electron', {
     },
   },
   showOpenDialog: (options) => dialog.showOpenDialog(options),
+  showSaveDialog: (options) => dialog.showSaveDialog(options),
 })

@@ -122,7 +122,10 @@ const getLocalConfig = async (): Promise<void> => {
 
 const saveConfig = async (): Promise<void> => {
   try {
-    const serializableConfig = JSON.parse(JSON.stringify(defaultConfig.value))
+    let serializableConfig = JSON.parse(JSON.stringify(defaultConfig.value))
+    if (serializableConfig.configVersion !== LATEST_CONFIG_VERSION) {
+      serializableConfig = migrateConfig(serializableConfig)
+    }
     await window.electron.ipcRenderer.setStoreValue(
       'config',
       serializableConfig,
@@ -136,6 +139,10 @@ const setConfig = <K extends keyof Config>(key: K, value: Config[K]): void => {
   defaultConfig.value[key] = value
 }
 
+const loadConfig = (config: Config): void => {
+  defaultConfig.value = migrateConfig(config)
+}
+
 const getPlainConfig = (): Config => defaultConfig.value
 
 const configProxy = new Proxy(defaultConfig, {
@@ -143,6 +150,7 @@ const configProxy = new Proxy(defaultConfig, {
     if (prop === 'set') return setConfig
     if (prop === 'save') return saveConfig
     if (prop === 'value') return getPlainConfig
+    if (prop === 'load') return loadConfig
     return undefined
   },
 })

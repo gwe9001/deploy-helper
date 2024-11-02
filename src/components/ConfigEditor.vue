@@ -60,6 +60,10 @@
           打開程式資料夾
         </el-button>
       </el-form-item>
+      <el-form-item>
+        <el-button @click="exportConfig" type="primary">匯出設定</el-button>
+        <el-button @click="importConfig" type="success">匯入設定</el-button>
+      </el-form-item>
     </el-form>
   </div>
 </template>
@@ -153,6 +157,43 @@ const openFolderDialog = async (type: 'tempPath') => {
 
 const openAppPath = async (name: string) => {
   window.electron.ipcRenderer.invoke('open-app-path', name)
+}
+
+const exportConfig = async () => {
+  try {
+    const result = await window.electron.showSaveDialog({
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+      defaultPath: 'config.json',
+    })
+
+    if (result.canceled) return
+
+    await window.electron.ipcRenderer.invoke('export-config', result.filePath)
+    ElMessage.success('設定已成功匯出')
+  } catch (error) {
+    ElMessage.error('匯出設定時發生錯誤')
+    console.error('Error exporting config:', error)
+  }
+}
+
+const importConfig = async () => {
+  try {
+    const result = await window.electron.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    })
+
+    if (result.canceled || result.filePaths.length === 0) return
+
+    await window.electron.ipcRenderer.invoke(
+      'import-config',
+      result.filePaths[0],
+    )
+    ElMessage.success('設定已成功匯入')
+  } catch (error) {
+    ElMessage.error('匯入設定時發生錯誤')
+    console.error('Error importing config:', error)
+  }
 }
 </script>
 
