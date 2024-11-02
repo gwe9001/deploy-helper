@@ -6,6 +6,7 @@ import Store from 'electron-store'
 import { enable, initialize } from '@electron/remote/main'
 import log from 'electron-log/main'
 import { updateElectronApp } from 'update-electron-app'
+import { promises as fs } from 'fs'
 
 const CONFIG_GIT_BASH_PATH = 'config.gitBashPath'
 const COMMAND_OUTPUT = 'command-output'
@@ -247,6 +248,34 @@ app.whenReady().then(() => {
   ipcMain.on('show-menu', (event) => {
     const menu = Menu.getApplicationMenu()
     menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
+  })
+
+  ipcMain.handle('export-config', async (event, filePath) => {
+    try {
+      const config = store.store
+      await fs.writeFile(filePath, JSON.stringify(config, null, 2), {
+        encoding: 'utf-8',
+      })
+      return true
+    } catch (error) {
+      console.error('Error exporting config:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('import-config', async (event, filePath) => {
+    try {
+      const configData = await fs.readFile(filePath, 'utf-8')
+      const importedConfig = JSON.parse(configData)
+
+      store.set(importedConfig)
+      // 重啟
+      app.relaunch()
+      app.quit()
+    } catch (error) {
+      console.error('Error importing config:', error)
+      throw error
+    }
   })
 })
 
