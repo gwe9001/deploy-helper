@@ -20,7 +20,7 @@ npm install
 Run the application in development mode:
 
 ```bash
-npm start
+npm run start
 ```
 
 This will start the Electron application using electron-forge.
@@ -30,13 +30,13 @@ This will start the Electron application using electron-forge.
 Package the application:
 
 ```bash
-npm package
+npm run package
 ```
 
 Create distributable formats:
 
 ```bash
-npm make
+npm run make
 ```
 
 ## License
