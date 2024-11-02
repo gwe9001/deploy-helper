@@ -59,8 +59,6 @@
         <el-button @click="openAppPath('app')" type="info">
           打開程式資料夾
         </el-button>
-      </el-form-item>
-      <el-form-item>
         <el-button @click="exportConfig" type="primary">匯出設定</el-button>
         <el-button @click="importConfig" type="success">匯入設定</el-button>
       </el-form-item>
