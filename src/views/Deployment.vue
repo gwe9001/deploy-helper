@@ -385,17 +385,28 @@ const executeStep = async () => {
           asyncData.value = ''
           let split = command.split(' ')
 
-          await window.electron.ipcRenderer.invoke(
-            'execute-command-stream',
-            split[0],
-            split.slice(1),
-            directory,
-            step.shellType,
-          )
-          if (step.outputField) {
-            inputValues[repo.name][step.outputField] = asyncData.value.trim()
-          }
-          output.value += `\n[${repo.name}] 命令完成成功\n\n`
+          await new Promise<void>((resolve, reject) => {
+            window.electron.ipcRenderer
+              .invoke(
+                'execute-command-stream',
+                split[0],
+                split.slice(1),
+                directory,
+                step.shellType,
+              )
+              .then(() => {
+                if (step.outputField) {
+                  inputValues[repo.name][step.outputField] =
+                    asyncData.value.trim()
+                }
+                output.value += `\n[${repo.name}] 命令執行完成\n\n`
+                resolve()
+              })
+              .catch((error) => {
+                output.value += `[${repo.name}] 錯誤: ${error.message}\n\n`
+                reject(error)
+              })
+          })
         }
         repoExecutionStatus[repo.name] = 'success'
       } catch (error: never) {
