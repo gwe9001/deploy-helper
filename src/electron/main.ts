@@ -145,6 +145,10 @@ async function executeCommandStream(
 
     process.on('close', (code) => {
       if (code === 0) {
+        BrowserWindow.getFocusedWindow()?.webContents.send(
+          COMMAND_OUTPUT,
+          'Command completed successfully\n',
+        )
         resolve()
       } else {
         reject(new Error(`Command exited with code ${code}`))
