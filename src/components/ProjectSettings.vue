@@ -70,13 +70,16 @@
           >
             <el-form>
               <el-form-item label="選擇資料夾">
-                <el-input v-model="batchImportPath" placeholder="請選擇資料夾">
-                  <template #append>
-                    <el-button @click="openFolderDialog('batchImport')"
-                      >瀏覽</el-button
-                    >
-                  </template>
-                </el-input>
+                <el-input
+                  v-model="batchImportPaths"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="請選擇資料夾"
+                  readonly
+                />
+                <el-button @click="openFolderDialog('batchImport')" class="mt-2"
+                  >瀏覽</el-button
+                >
               </el-form-item>
             </el-form>
             <template #footer>
@@ -235,7 +238,7 @@ const inputRepoName = ref('')
 const inputRepoPath = ref('')
 
 const batchImportDialogVisible = ref(false)
-const batchImportPath = ref('')
+const batchImportPaths = ref('')
 
 const showBatchImportDialog = () => {
   batchImportDialogVisible.value = true
@@ -289,43 +292,46 @@ const removeRepo = (project: never, index: number) => {
 }
 
 const openFolderDialog = async (
-  type: 'project' | 'repo' | 'newRepo',
+  type: 'project' | 'repo' | 'newRepo' | 'batchImport',
   index?: number,
 ) => {
+  let dialogProperties: string[] = ['openDirectory']
+
+  if (type === 'batchImport') {
+    dialogProperties.push('multiSelections')
+  }
+
   const result = await window.electron.showOpenDialog({
-    properties: ['openDirectory'],
+    properties: dialogProperties,
   })
 
   if (!result.canceled && result.filePaths.length > 0) {
-    const selectedPath = result.filePaths[0]
     if (type === 'batchImport') {
-      batchImportPath.value = selectedPath
+      batchImportPaths.value = result.filePaths.join('\n')
     } else if (type === 'project') {
-      selectedProject.value.path = selectedPath
+      selectedProject.value.path = result.filePaths[0]
       updateProject(selectedProject.value)
     } else if (type === 'repo' && typeof index === 'number') {
-      selectedProject.value.repos[index].path = selectedPath
+      selectedProject.value.repos[index].path = result.filePaths[0]
       updateRepo(selectedProject.value, index)
     } else if (type === 'newRepo') {
-      inputRepoPath.value = selectedPath
+      inputRepoPath.value = result.filePaths[0]
     }
   }
 }
-
 const performBatchImport = async () => {
-  if (!batchImportPath.value) {
-    ElMessage.warning('請選擇一個資料夾')
+  if (!batchImportPaths.value) {
+    ElMessage.warning('請選擇至少一個資料夾')
     return
   }
 
   try {
-    const subfolders = await window.electron.ipcRenderer.invoke(
-      'get-subfolders',
-      batchImportPath.value,
-    )
-    const newRepos = subfolders.map((subfolder: string) => ({
-      name: subfolder.split('\\').pop() || '',
-      path: subfolder,
+    const selectedPaths = batchImportPaths.value
+      .split('\n')
+      .filter((path) => path.trim() !== '')
+    const newRepos = selectedPaths.map((folderPath: string) => ({
+      name: folderPath.split(/[/\\]/).pop() || '',
+      path: folderPath,
     }))
 
     if (selectedProject.value) {
@@ -340,7 +346,7 @@ const performBatchImport = async () => {
     }
 
     batchImportDialogVisible.value = false
-    batchImportPath.value = ''
+    batchImportPaths.value = ''
   } catch (error) {
     console.error('批次匯入時發生錯誤:', error)
     ElMessage.error('批次匯入時發生錯誤')

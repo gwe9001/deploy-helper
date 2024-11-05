@@ -281,19 +281,6 @@ app.whenReady().then(() => {
       throw error
     }
   })
-
-  ipcMain.handle('get-subfolders', async (event, folderPath: string) => {
-    try {
-      const items = await fs.readdir(folderPath, { withFileTypes: true })
-      const subfolders = items
-        .filter((item) => item.isDirectory())
-        .map((item) => path.join(folderPath, item.name))
-      return subfolders
-    } catch (error) {
-      console.error('Error getting subfolders:', error)
-      throw error
-    }
-  })
 })
 
 app.on('window-all-closed', () => {
