@@ -52,6 +52,44 @@
         </el-tab-pane>
 
         <el-tab-pane label="儲存庫">
+          <div class="batch-import-section">
+            <el-button
+              @click="showBatchImportDialog"
+              type="primary"
+              size="small"
+            >
+              批次匯入儲存庫
+            </el-button>
+          </div>
+
+          <!-- 批次匯入對話框 -->
+          <el-dialog
+            v-model="batchImportDialogVisible"
+            title="批次匯入儲存庫"
+            width="50%"
+          >
+            <el-form>
+              <el-form-item label="選擇資料夾">
+                <el-input v-model="batchImportPath" placeholder="請選擇資料夾">
+                  <template #append>
+                    <el-button @click="openFolderDialog('batchImport')"
+                      >瀏覽</el-button
+                    >
+                  </template>
+                </el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <span class="dialog-footer">
+                <el-button @click="batchImportDialogVisible = false"
+                  >取消</el-button
+                >
+                <el-button type="primary" @click="performBatchImport">
+                  匯入
+                </el-button>
+              </span>
+            </template>
+          </el-dialog>
           <div v-if="selectedProject.repos.length === 0" class="no-repos">
             尚未添加儲存庫。
           </div>
@@ -188,12 +226,20 @@
 import { onMounted, ref, computed } from 'vue'
 import config from '../config'
 import { Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const projects = ref<never[]>([])
 const selectedProjectId = computed(() => config.value().selectedProject || '')
 const showAddRepo = ref(false)
 const inputRepoName = ref('')
 const inputRepoPath = ref('')
+
+const batchImportDialogVisible = ref(false)
+const batchImportPath = ref('')
+
+const showBatchImportDialog = () => {
+  batchImportDialogVisible.value = true
+}
 
 const selectedProject = computed(() => {
   return projects.value.find((p) => p.id === selectedProjectId.value)
@@ -252,7 +298,9 @@ const openFolderDialog = async (
 
   if (!result.canceled && result.filePaths.length > 0) {
     const selectedPath = result.filePaths[0]
-    if (type === 'project') {
+    if (type === 'batchImport') {
+      batchImportPath.value = selectedPath
+    } else if (type === 'project') {
       selectedProject.value.path = selectedPath
       updateProject(selectedProject.value)
     } else if (type === 'repo' && typeof index === 'number') {
@@ -261,6 +309,41 @@ const openFolderDialog = async (
     } else if (type === 'newRepo') {
       inputRepoPath.value = selectedPath
     }
+  }
+}
+
+const performBatchImport = async () => {
+  if (!batchImportPath.value) {
+    ElMessage.warning('請選擇一個資料夾')
+    return
+  }
+
+  try {
+    const subfolders = await window.electron.ipcRenderer.invoke(
+      'get-subfolders',
+      batchImportPath.value,
+    )
+    const newRepos = subfolders.map((subfolder: string) => ({
+      name: subfolder.split('\\').pop() || '',
+      path: subfolder,
+    }))
+
+    if (selectedProject.value) {
+      selectedProject.value.repos = [
+        ...selectedProject.value.repos,
+        ...newRepos,
+      ]
+      updateProject(selectedProject.value)
+      ElMessage.success(`成功匯入 ${newRepos.length} 個儲存庫`)
+    } else {
+      ElMessage.error('未選擇專案，無法匯入儲存庫')
+    }
+
+    batchImportDialogVisible.value = false
+    batchImportPath.value = ''
+  } catch (error) {
+    console.error('批次匯入時發生錯誤:', error)
+    ElMessage.error('批次匯入時發生錯誤')
   }
 }
 </script>
@@ -339,5 +422,14 @@ const openFolderDialog = async (
   min-width: 100%;
   background-color: #fff;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.batch-import-section {
+  margin-top: 20px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
