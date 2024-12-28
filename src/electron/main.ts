@@ -7,6 +7,9 @@ import log from 'electron-log/main'
 import { updateElectronApp } from 'update-electron-app'
 import { setupIpcHandlers } from './ipcHandlers'
 
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
+declare const MAIN_WINDOW_VITE_NAME: string
+
 const isDev = !app.isPackaged
 
 // handle auto updates
@@ -18,7 +21,6 @@ if (electronSquirrelStartup) {
   app.quit()
 }
 
-const store = new Store()
 initialize()
 
 log.initialize()

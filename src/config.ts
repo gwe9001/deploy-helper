@@ -1,6 +1,10 @@
 import { ref } from 'vue'
 import log from 'electron-log/renderer'
-import { migrateToV2, migrateToV3 } from './migrations/configMigrations'
+import {
+  migrateToV2,
+  migrateToV3,
+  migrateToV4,
+} from './migrations/configMigrations'
 
 export interface Config {
   configVersion: number
@@ -21,9 +25,11 @@ export interface Project {
   path: string
   repos: Repo[]
   dockerLogin: {
-    registry: string
-    username: string
-    password: string
+    [environment: string]: {
+      registry: string
+      username: string
+      password: string
+    }
   }
 }
 
@@ -55,7 +61,7 @@ export interface StepCombination {
 }
 
 const INITIAL_CONFIG_VERSION = 3
-const LATEST_CONFIG_VERSION = 3 // 更新到新的版本
+const LATEST_CONFIG_VERSION = 4 // 更新到新的版本
 
 const defaultConfig = ref<Config>({
   configVersion: LATEST_CONFIG_VERSION,
@@ -86,6 +92,7 @@ function migrateConfig(config: Config): Config {
   const migrationFunctions = [
     { version: 1, migrate: migrateToV2 },
     { version: 2, migrate: migrateToV3 },
+    { version: 3, migrate: migrateToV4 },
     // 可以在這裡添加更多的遷移函數
   ]
 

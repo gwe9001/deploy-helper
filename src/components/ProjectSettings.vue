@@ -195,29 +195,50 @@
 
         <el-tab-pane label="Registry">
           <el-form label-width="120px">
-            <el-form-item label="Registry">
-              <el-input
-                v-model="selectedProject.dockerLogin.registry"
-                placeholder="example.com"
-                @change="updateProject(selectedProject)"
-              />
+            <el-form-item label="環境">
+              <el-select v-model="selectedEnv" placeholder="請選擇環境">
+                <el-option
+                  v-for="env in environments"
+                  :key="env"
+                  :label="env"
+                  :value="env"
+                />
+              </el-select>
             </el-form-item>
-            <el-form-item label="使用者名稱">
-              <el-input
-                v-model="selectedProject.dockerLogin.username"
-                placeholder="請輸入使用者名稱"
-                @change="updateProject(selectedProject)"
-              />
-            </el-form-item>
-            <el-form-item label="密碼">
-              <el-input
-                v-model="selectedProject.dockerLogin.password"
-                placeholder="請輸入密碼"
-                type="password"
-                show-password
-                @change="updateProject(selectedProject)"
-              />
-            </el-form-item>
+
+            <template v-if="selectedEnv">
+              <el-form-item label="Registry">
+                <el-input
+                  v-model="currentDockerLogin.registry"
+                  placeholder="example.com"
+                  @change="updateDockerLogin"
+                />
+              </el-form-item>
+              <el-form-item label="使用者名稱">
+                <el-input
+                  v-model="currentDockerLogin.username"
+                  placeholder="請輸入使用者名稱"
+                  @change="updateDockerLogin"
+                />
+              </el-form-item>
+              <el-form-item label="密碼">
+                <el-input
+                  v-model="currentDockerLogin.password"
+                  placeholder="請輸入密碼"
+                  type="password"
+                  show-password
+                  @change="updateDockerLogin"
+                />
+              </el-form-item>
+            </template>
+
+            <el-alert
+              v-else
+              title="請先選擇環境"
+              type="info"
+              :closable="false"
+              show-icon
+            />
           </el-form>
         </el-tab-pane>
       </el-tabs>
@@ -226,7 +247,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import config from '../config'
 import { Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -240,6 +261,50 @@ const inputRepoPath = ref('')
 const batchImportDialogVisible = ref(false)
 const batchImportPaths = ref('')
 
+const selectedEnv = ref('')
+const environments = computed(() => config.value().environments)
+
+const currentDockerLogin = ref({
+  registry: '',
+  username: '',
+  password: '',
+})
+
+watch(selectedEnv, (newEnv) => {
+  if (selectedProject.value && newEnv) {
+    const envLogin = selectedProject.value.dockerLogin[newEnv]
+    if (envLogin) {
+      currentDockerLogin.value = { ...envLogin }
+    } else {
+      currentDockerLogin.value = {
+        registry: '',
+        username: '',
+        password: '',
+      }
+    }
+  }
+})
+
+const initializeDockerLogin = (project) => {
+  if (!project.dockerLogin) {
+    project.dockerLogin = {}
+  }
+}
+
+const updateDockerLogin = () => {
+  if (!selectedProject.value || !selectedEnv.value) return
+
+  initializeDockerLogin(selectedProject.value)
+
+  selectedProject.value.dockerLogin[selectedEnv.value] = {
+    registry: currentDockerLogin.value.registry,
+    username: currentDockerLogin.value.username,
+    password: currentDockerLogin.value.password,
+  }
+
+  updateProject(selectedProject.value)
+}
+
 const showBatchImportDialog = () => {
   batchImportDialogVisible.value = true
 }
@@ -250,6 +315,8 @@ const selectedProject = computed(() => {
 
 onMounted(() => {
   projects.value = config.value().projects
+  projects.value.forEach(initializeDockerLogin)
+  selectedEnv.value = config.value().selectedEnvironment || ''
 })
 
 const updateProject = (project: never) => {
@@ -352,6 +419,21 @@ const performBatchImport = async () => {
     ElMessage.error('批次匯入時發生錯誤')
   }
 }
+
+watch(selectedProject, (newProject) => {
+  if (newProject && selectedEnv.value) {
+    const envLogin = newProject.dockerLogin[selectedEnv.value]
+    if (envLogin) {
+      currentDockerLogin.value = { ...envLogin }
+    } else {
+      currentDockerLogin.value = {
+        registry: '',
+        username: '',
+        password: '',
+      }
+    }
+  }
+})
 </script>
 
 <style scoped>
