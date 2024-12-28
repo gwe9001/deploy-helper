@@ -39,6 +39,25 @@ Create distributable formats:
 npm run make
 ```
 
+### Publishing a New Release
+
+1. Update the version in `package.json`:
+
+```json
+{
+  "version": "1.0.13"
+}
+```
+
+2. Create and push a new tag:
+
+```bash
+git tag v1.0.13
+git push origin v1.0.13
+```
+
+This will trigger the GitHub Actions workflow to automatically build and publish the new release.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
