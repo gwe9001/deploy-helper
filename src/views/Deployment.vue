@@ -444,11 +444,20 @@ const finish = () => {
 const loginToRegistry = async () => {
   output.value = '嘗試登入 Registry...\n'
 
-  const { username, password, registry } =
-    selectedProject.value?.dockerLogin || {}
+  if (!selectedProject.value || !selectedEnvironment.value) {
+    output.value += '錯誤: 未選擇專案或環境。\n'
+    return
+  }
 
-  if (!username || !password || !registry) {
-    output.value += '錯誤: Docker 登入憑證或註冊中心沒有設定。\n'
+  const dockerLogin =
+    selectedProject.value.dockerLogin[selectedEnvironment.value]
+
+  if (
+    !dockerLogin?.username ||
+    !dockerLogin?.password ||
+    !dockerLogin?.registry
+  ) {
+    output.value += `錯誤: ${selectedEnvironment.value} 環境的 Docker 登入憑證或註冊中心沒有設定。\n`
     output.value += '請在系統設定中的專案設定中配置Registry、用戶名和密碼。\n'
     return
   }
@@ -456,13 +465,13 @@ const loginToRegistry = async () => {
   try {
     const result = await window.electron.ipcRenderer.invoke(
       'execute-command',
-      `docker login ${registry} -u '${username}' -p '${password}'`,
+      `docker login ${dockerLogin.registry} -u '${dockerLogin.username}' -p '${dockerLogin.password}'`,
       '.',
     )
     output.value += result
-    output.value += `\nDocker 登入 ${registry} 成功。\n`
+    output.value += `\nDocker 登入 ${dockerLogin.registry} 成功。\n`
   } catch (error: any) {
-    output.value += `登入 ${registry} 時發生錯誤: ${error.message}\n`
+    output.value += `登入 ${dockerLogin.registry} 時發生錯誤: ${error.message}\n`
   }
 }
 
