@@ -32,33 +32,50 @@ const close = async () => {
 .window-controls {
   display: flex;
   -webkit-app-region: no-drag;
+  gap: 1px;
 }
 
 .control-button {
   background: none;
   border: none;
-  color: #909399;
-  padding: 0 10px;
+  color: var(--text-color);
+  padding: 0 16px;
   height: 32px;
   cursor: pointer;
-  transition:
-    background-color 0.3s,
-    color 0.3s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.7;
 }
 
 .control-button:hover {
-  background-color: #f5f7fa;
+  background-color: var(--background-color);
+  opacity: 1;
 }
 
 .control-button.close:hover {
-  background-color: #f56c6c;
+  background-color: var(--danger-color);
   color: white;
 }
 
 .el-icon {
-  font-size: 16px;
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.control-button:hover .el-icon {
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .control-button {
+    padding: 0 20px;
+    height: 40px;
+  }
+
+  .el-icon {
+    font-size: 16px;
+  }
 }
 </style>

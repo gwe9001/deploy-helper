@@ -1,134 +1,192 @@
 <template>
-  <div class="deployment">
+  <div class="deployment-view">
     <div class="header-container">
       <h2>部署 {{ selectedProject?.name }}</h2>
-      <el-button @click="loginToRegistry" type="primary"
-        >登入 Registry</el-button
-      >
-    </div>
+      <div class="header-controls">
+        <el-form class="header-form">
+          <el-form-item label="步驟組合">
+            <el-select
+              v-model="selectedCombinationId"
+              placeholder="選擇步驟組合"
+              @change="handleCombinationChange"
+            >
+              <el-option
+                v-for="combination in availableStepCombinations"
+                :key="combination.id"
+                :label="combination.name"
+                :value="combination.id"
+              />
+            </el-select>
+          </el-form-item>
 
-    <el-form>
-      <el-form-item label="選擇步驟組合">
-        <el-select
-          v-model="selectedCombinationId"
-          placeholder="選擇步驟組合"
-          @change="handleCombinationChange"
+          <el-form-item label="Repo">
+            <el-select
+              v-model="selectedRepos"
+              multiple
+              filterable
+              placeholder="選擇Repo"
+              style="width: 100%"
+              collapse-tags
+              collapse-tags-tooltip
+            >
+              <el-option
+                v-for="repo in selectedProject?.repos"
+                :key="repo.name"
+                :label="repo.name"
+                :value="repo.name"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <el-button @click="loginToRegistry" type="primary"
+          >登入 Registry</el-button
         >
-          <el-option
-            v-for="combination in availableStepCombinations"
-            :key="combination.id"
-            :label="combination.name"
-            :value="combination.id"
-          />
-        </el-select>
-      </el-form-item>
-    </el-form>
-
-    <el-form>
-      <el-form-item label="選擇Repo">
-        <el-select
-          v-model="selectedRepos"
-          multiple
-          filterable
-          placeholder="選擇Repo"
-          style="width: 100%"
-        >
-          <el-option
-            v-for="repo in selectedProject?.repos"
-            :key="repo.name"
-            :label="repo.name"
-            :value="repo.name"
-          />
-        </el-select>
-      </el-form-item>
-    </el-form>
-
-    <div class="selected-repos">
-      <el-tag
-        v-for="repo in selectedRepos"
-        :key="repo"
-        :type="getTagType(repoExecutionStatus[repo])"
-        closable
-        @close="removeRepo(repo)"
-        class="repo-tag"
-      >
-        {{ repo }}
-        <span class="status-text">{{
-          getStatusText(repoExecutionStatus[repo])
-        }}</span>
-      </el-tag>
-    </div>
-
-    <el-steps :active="currentStep" finish-status="success">
-      <el-step v-for="step in currentSteps" :key="step.id" :title="step.name" />
-    </el-steps>
-
-    <el-card v-if="currentStepData" class="step-card">
-      <div class="step-header">
-        <h3>{{ currentStepData.name }}</h3>
-        <el-progress
-          :percentage="completionPercentage"
-          :status="allReposCompleted ? 'success' : ''"
-        />
       </div>
+    </div>
 
-      <el-form v-for="repo in selectedRepos" :key="repo">
-        <el-form-item
-          :label="`${repo} ${currentStepData.outputReference || ''}`"
-        >
-          <el-input
-            v-if="currentStepData.hasOutputReference"
-            v-model="inputValues[repo][currentStepData.outputReference]"
-            placeholder="請輸入值"
-          />
-        </el-form-item>
-      </el-form>
-
-      <el-form v-if="currentStepData.hasDirectory">
-        <el-form-item label="資料夾">
-          <el-input v-model="directoryValue" placeholder="請輸入資料夾路徑" />
-        </el-form-item>
-      </el-form>
-
-      <div class="button-group">
-        <el-button
-          @click="executeStep"
-          type="primary"
-          :disabled="!canExecute || execution"
-          class="execute-button"
-        >
-          執行
-        </el-button>
-        <div class="right-buttons">
-          <el-button @click="resetForm" type="info" :disabled="currentStep == 0"
-            >重設</el-button
-          >
+    <div class="progress-steps">
+      <!-- 進度條區塊 -->
+      <el-steps
+        :active="currentStep"
+        finish-status="success"
+        class="progress-steps"
+      >
+        <el-step
+          v-for="step in currentSteps"
+          :key="step.id"
+          :title="step.name"
+        />
+      </el-steps>
+      <div v-if="selectedRepos.length > 0" class="selected-repos">
+        <div class="repos-header">
+          <span>已選擇的 Repo</span>
           <el-button
-            v-if="currentStep > 0"
-            @click="previousStep"
             type="primary"
+            link
+            @click="selectedRepos = []"
+            size="small"
           >
-            上一步
+            清除全部
           </el-button>
-          <el-button
-            v-if="currentStep < currentSteps.length - 1"
-            @click="nextStep"
-            type="primary"
-            :disabled="execution"
+        </div>
+        <div class="repos-content">
+          <el-tag
+            v-for="repo in selectedRepos"
+            :key="repo"
+            :type="getTagType(repoExecutionStatus[repo])"
+            closable
+            @close="removeRepo(repo)"
+            class="repo-tag"
           >
-            下一步
-          </el-button>
-          <el-button v-else @click="finish" type="success" :disabled="execution"
-            >完成</el-button
-          >
+            <span class="repo-name">{{ repo }}</span>
+            <span class="status-text">{{
+              getStatusText(repoExecutionStatus[repo])
+            }}</span>
+          </el-tag>
         </div>
       </div>
-    </el-card>
+    </div>
 
-    <el-card v-if="output" class="output-card">
-      <h4>執行結果：</h4>
-      <pre>{{ output }}</pre>
-    </el-card>
+    <!-- 已選擇的Repo標籤 -->
+
+    <div class="content-container">
+      <!-- 主要操作區塊 -->
+      <div class="deployment-main-content">
+        <el-card v-if="currentStepData" class="step-card">
+          <div class="step-header">
+            <h3>{{ currentStepData.name }}</h3>
+            <el-progress
+              :percentage="completionPercentage"
+              :status="allReposCompleted ? 'success' : ''"
+            />
+          </div>
+
+          <div class="step-content">
+            <el-form v-for="repo in selectedRepos" :key="repo">
+              <el-form-item
+                :label="`${repo} ${currentStepData.outputReference || ''}`"
+              >
+                <el-input
+                  v-if="currentStepData.hasOutputReference"
+                  v-model="inputValues[repo][currentStepData.outputReference]"
+                  placeholder="請輸入值"
+                />
+              </el-form-item>
+            </el-form>
+
+            <el-form v-if="currentStepData.hasDirectory">
+              <el-form-item label="資料夾">
+                <el-input
+                  v-model="directoryValue"
+                  placeholder="請輸入資料夾路徑"
+                />
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <div class="button-group">
+            <el-button
+              @click="executeStep"
+              type="primary"
+              :disabled="!canExecute || execution"
+              class="execute-button"
+            >
+              執行
+            </el-button>
+            <div class="right-buttons">
+              <el-button
+                @click="resetForm"
+                type="info"
+                :disabled="currentStep == 0"
+                >重設</el-button
+              >
+              <el-button
+                v-if="currentStep > 0"
+                @click="previousStep"
+                type="primary"
+              >
+                上一步
+              </el-button>
+              <el-button
+                v-if="currentStep < currentSteps.length - 1"
+                @click="nextStep"
+                type="primary"
+                :disabled="execution"
+              >
+                下一步
+              </el-button>
+              <el-button
+                v-else
+                @click="finish"
+                type="success"
+                :disabled="execution"
+                >完成</el-button
+              >
+            </div>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 輸出結果區塊 -->
+      <div class="output-section">
+        <el-card class="output-card">
+          <template #header>
+            <div class="output-header">
+              <span>執行結果</span>
+              <el-button
+                type="primary"
+                link
+                @click="output = ''"
+                :disabled="!output"
+              >
+                清除
+              </el-button>
+            </div>
+          </template>
+          <pre>{{ output }}</pre>
+        </el-card>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -526,90 +584,358 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.deployment {
+.deployment-view {
   padding: 20px;
-}
-
-.step-card,
-.output-card {
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-}
-
-.output-card pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .header-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--el-border-color-light);
+  min-height: 40px;
+  flex-wrap: nowrap;
 }
 
 .header-container h2 {
   margin: 0;
+  font-size: 20px;
+  color: var(--el-text-color-primary);
+  white-space: nowrap;
+  margin-right: 15px;
+  flex-shrink: 0;
 }
 
-.el-button {
-  transition: background-color 0.3s ease;
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
-.el-button:hover {
-  background-color: #007bff;
+.header-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
-.button-group {
-  margin-top: 10px;
+.header-form :deep(.el-form-item) {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.header-form :deep(.el-select) {
+  width: 100%;
+  min-width: 100px;
+}
+
+.header-controls .el-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-width: 100px;
+  padding: 8px 15px;
+}
+
+@media (max-width: 1024px) {
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .header-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-form {
+    flex-direction: column;
+  }
+
+  .header-controls .el-button {
+    align-self: flex-start;
+  }
+}
+
+.progress-steps {
+  padding: 10px;
+  background-color: var(--el-bg-color-page);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 5px;
+}
+
+.content-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  margin-top: 0;
+}
+
+.deployment-main-content {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.selected-repos {
+  background-color: var(--el-bg-color-page);
+  padding: 5px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 5px;
+}
+
+.output-section {
+  grid-column: 2;
+  position: sticky;
+  top: 20px;
+  align-self: start;
+  height: fit-content;
+}
+
+.form-section {
+  background-color: var(--el-bg-color-page);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+.repos-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.execute-button {
-  /* No specific styling needed here, unless you want to style it differently */
+.repos-header span {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
 }
 
-.right-buttons {
+.repos-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.repo-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  max-width: 100%;
+}
+
+.repo-tag :deep(.el-tag__content) {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  overflow: hidden;
+}
+
+.repo-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.status-text {
+  margin-left: 4px;
+  font-size: 0.85em;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.workflow-section {
+  margin-top: 20px;
+}
+
+.el-steps {
+  padding: 25px;
+  background-color: var(--el-bg-color-page);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:deep(.el-step) {
+  padding-bottom: 15px;
+}
+
+:deep(.el-step__title) {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.step-card {
+  margin: 0;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
 .step-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--el-border-color-light);
 }
 
 .step-header h3 {
   margin: 0;
+  font-size: 18px;
+  color: var(--el-text-color-primary);
 }
 
-.el-progress {
-  width: 200px;
+.step-content {
+  padding: 20px 0;
 }
 
-.ml-2 {
-  margin-left: 8px;
-}
-
-.selected-repos {
-  margin-top: 10px;
+.button-group {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--el-border-color-light);
+}
+
+.execute-button {
+  min-width: 120px;
+}
+
+.right-buttons {
+  display: flex;
   gap: 10px;
 }
 
-.repo-tag {
-  display: flex;
-  align-items: center;
-  padding: 5px 10px;
+.output-card {
+  height: 100%;
+  margin: 0;
 }
 
-.status-text {
-  margin-left: 5px;
-  font-size: 0.8em;
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.output-header span {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.output-card pre {
+  margin: 0;
+  padding: 15px;
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  min-height: 150px;
+}
+
+.output-card :deep(span[style*='color: red']) {
+  color: #ff6b6b !important;
+}
+
+@media (min-width: 1400px) {
+  .top-section {
+    grid-template-columns: 2fr 1fr;
+  }
+
+  .progress-steps {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1400px) {
+  .content-container {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .deployment-view {
+    padding: 15px;
+  }
+
+  .content-container {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 15px;
+    margin-top: 0;
+  }
+
+  .progress-steps {
+    padding: 15px;
+  }
+
+  .selected-repos {
+    padding: 12px;
+  }
+
+  .form-section,
+  .step-card {
+    padding: 15px;
+  }
+
+  .output-card pre {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    grid-template-columns: 1fr;
+    margin-top: 0;
+  }
+
+  .deployment-main-content,
+  .output-section {
+    grid-column: 1;
+  }
+
+  .output-section {
+    position: static;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .right-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .execute-button {
+    width: 100%;
+  }
 }
 </style>

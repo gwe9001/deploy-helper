@@ -1,5 +1,6 @@
 <template>
   <div class="deployment-workflow">
+    <h2>部署工作流</h2>
     <el-form :model="form" label-width="120px">
       <el-form-item label="選擇專案">
         <el-select
@@ -224,32 +225,243 @@ const saveWorkflow = () => {
 
 <style scoped>
 .deployment-workflow {
-  padding: 20px;
+  padding: 24px;
+  background-color: var(--background-color);
+  border-radius: 12px;
+  min-height: calc(100vh - 48px);
+}
+
+.deployment-workflow h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 24px;
+  color: #1a1a1a;
+}
+
+.deployment-workflow :deep(.el-form) {
+  background-color: white;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.deployment-workflow :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #1a1a1a;
+  padding-bottom: 8px;
+  line-height: 1.5;
+}
+
+.deployment-workflow :deep(.el-select .el-input__wrapper) {
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.deployment-workflow :deep(.el-select .el-input__wrapper:hover) {
+  border-color: var(--el-color-primary);
+}
+
+.deployment-workflow :deep(.el-select .el-input__wrapper:focus-within) {
+  border-color: var(--el-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--el-color-primary-rgb), 0.2);
 }
 
 .workflow-steps {
-  margin-top: 20px;
+  margin-top: 32px;
+  background-color: white;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.workflow-steps h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 20px;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.workflow-steps h4::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 4px;
+  height: 20px;
+  background-color: var(--el-color-primary);
+  border-radius: 2px;
 }
 
 .step-item {
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.step-item:hover {
+  transform: translateY(-2px);
+}
+
+.step-item :deep(.el-card) {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.step-item :deep(.el-card:hover) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.step-item :deep(.el-card__body) {
+  padding: 16px;
 }
 
 .drag-handle {
   cursor: move;
-  padding: 5px;
-  margin-right: 10px;
-  display: inline-block;
+  padding: 8px;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.step-item h5 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 8px;
+  color: #1a1a1a;
+}
+
+.step-item p {
+  font-family: monospace;
+  background-color: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 0 0 16px;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.step-item :deep(.el-button--danger) {
+  background-color: #fef2f2;
+  border-color: #fee2e2;
+  color: #dc2626;
+}
+
+.step-item :deep(.el-button--danger:hover) {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: white;
 }
 
 .add-step {
-  margin-top: 20px;
+  margin-top: 32px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  background-color: white;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.add-step :deep(.el-select) {
+  flex: 1;
+}
+
+.add-step :deep(.el-button) {
+  height: 40px;
+  padding: 0 24px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.add-step :deep(.el-button--primary) {
+  box-shadow: 0 2px 4px rgba(var(--el-color-primary-rgb), 0.3);
+}
+
+.add-step :deep(.el-button--primary:hover) {
+  box-shadow: 0 4px 8px rgba(var(--el-color-primary-rgb), 0.4);
+  transform: translateY(-1px);
 }
 
 .save-button {
-  margin-top: 20px;
+  margin-top: 32px;
+  width: 100%;
+  height: 44px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(var(--el-color-primary-rgb), 0.3);
+}
+
+.save-button:hover {
+  box-shadow: 0 4px 8px rgba(var(--el-color-primary-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .deployment-workflow {
+    padding: 16px;
+    min-height: calc(100vh - 32px);
+  }
+
+  .deployment-workflow h2 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .deployment-workflow :deep(.el-form) {
+    padding: 16px;
+  }
+
+  .workflow-steps {
+    margin-top: 24px;
+    padding: 16px;
+  }
+
+  .workflow-steps h4 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+  }
+
+  .step-item {
+    margin-bottom: 12px;
+  }
+
+  .step-item h5 {
+    font-size: 1rem;
+  }
+
+  .add-step {
+    margin-top: 24px;
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .add-step :deep(.el-button) {
+    width: 100%;
+  }
+
+  .save-button {
+    margin-top: 24px;
+  }
 }
 </style>
