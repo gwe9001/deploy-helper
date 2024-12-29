@@ -438,86 +438,214 @@ watch(selectedProject, (newProject) => {
 
 <style scoped>
 .project-settings {
-  padding: 20px;
+  padding: 24px;
+  background-color: var(--background-color);
+  border-radius: 12px;
+  min-height: calc(100vh - 48px);
 }
 
-.project-selector {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.project-settings h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 24px;
+  color: var(--el-text-color-primary);
+}
+
+.project-alert {
+  margin-bottom: 24px;
+}
+
+.project-alert :deep(.el-alert__title) {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.project-alert :deep(.el-alert__description) {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .project-card {
-  margin-bottom: 20px;
+  background-color: var(--el-bg-color);
+  border-radius: 12px;
+  box-shadow: var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.project-card:hover {
+  box-shadow: var(--el-box-shadow);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--el-border-color-light);
+  background-color: var(--el-bg-color-page);
+  border-radius: 12px 12px 0 0;
 }
 
-.el-form-item .el-form-item {
-  margin-bottom: 0;
-  width: 100%;
+.card-header span {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.project-card :deep(.el-card__body) {
+  padding: 24px;
+}
+
+.project-card :deep(.el-tabs__nav-wrap::after) {
+  height: 1px;
+  background-color: var(--el-border-color-light);
+}
+
+.project-card :deep(.el-tabs__item) {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0 24px;
+  height: 44px;
+  line-height: 44px;
+  transition: all 0.2s ease;
+}
+
+.project-card :deep(.el-tabs__item.is-active) {
+  font-weight: 600;
+}
+
+.project-card :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.project-card :deep(.el-input__wrapper) {
+  box-shadow: none;
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.project-card :deep(.el-input__wrapper:hover) {
+  border-color: var(--el-color-primary);
+}
+
+.project-card :deep(.el-input__wrapper:focus-within) {
+  border-color: var(--el-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--el-color-primary-rgb), 0.2);
+}
+
+.batch-import-section {
+  margin-bottom: 24px;
 }
 
 .no-repos {
   text-align: center;
-  color: #909399;
-  padding: 20px;
-}
-
-.add-repo-section {
-  margin-top: 20px;
-}
-
-.add-repo-form {
-  margin-top: 10px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  padding: 20px;
-  background-color: #f5f7fa;
+  padding: 32px;
+  color: var(--el-text-color-secondary);
+  background-color: var(--el-bg-color-page);
+  border-radius: 8px;
+  border: 1px dashed var(--el-border-color);
 }
 
 .repo-card {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--el-border-color);
+  transition: all 0.2s ease;
+  background-color: var(--el-bg-color);
+}
+
+.repo-card:hover {
+  box-shadow: var(--el-box-shadow-light);
+  border-color: var(--el-color-primary-light-7);
+}
+
+.repo-card :deep(.el-card__body) {
+  padding: 20px;
 }
 
 .repo-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 16px;
+  gap: 8px;
 }
 
-.el-form-item {
-  margin-bottom: 15px;
+.add-repo-section {
+  margin-top: 24px;
 }
 
-.el-input {
-  width: 100%;
+.add-repo-form {
+  margin-top: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--el-border-color);
+  background-color: var(--el-bg-color-page);
 }
 
-.el-input__inner {
-  text-overflow: ellipsis;
-}
-
-.el-input:hover .el-input__inner {
-  position: absolute;
-  z-index: 1;
-  width: auto;
-  min-width: 100%;
-  background-color: #fff;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
-.batch-import-section {
-  margin-top: 20px;
+.add-repo-form :deep(.el-card__body) {
+  padding: 20px;
 }
 
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dialog-footer .el-button {
+  min-width: 100px;
+}
+
+@media (max-width: 768px) {
+  .project-settings {
+    padding: 16px;
+    min-height: calc(100vh - 32px);
+  }
+
+  .project-settings h2 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .card-header {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card-header span {
+    font-size: 1.1rem;
+  }
+
+  .project-card :deep(.el-card__body) {
+    padding: 16px;
+  }
+
+  .project-card :deep(.el-tabs__item) {
+    padding: 0 16px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 0.95rem;
+  }
+
+  .repo-card :deep(.el-card__body) {
+    padding: 16px;
+  }
+
+  .dialog-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dialog-footer .el-button {
+    width: 100%;
+  }
+
+  .repo-actions {
+    flex-direction: column;
+  }
 }
 </style>

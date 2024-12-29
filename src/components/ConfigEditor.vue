@@ -197,10 +197,101 @@ const importConfig = async () => {
 
 <style scoped>
 .config-editor {
-  padding: 20px;
+  padding: 24px;
+  background-color: var(--el-bg-color);
+  border-radius: 12px;
+  min-height: calc(100vh - 48px);
 }
 
-.el-form-item {
-  margin-bottom: 20px;
+.config-editor h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 32px;
+  color: var(--el-text-color-primary);
+}
+
+.environment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.environment-list .el-tag {
+  padding: 6px 12px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.environment-list .el-tag:hover {
+  transform: translateY(-1px);
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 24px;
+  max-width: 800px;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.el-input__wrapper) {
+  box-shadow: none;
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-input__wrapper:hover) {
+  border-color: var(--el-color-primary);
+}
+
+:deep(.el-input__wrapper:focus-within) {
+  border-color: var(--el-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--el-color-primary-rgb), 0.2);
+}
+
+:deep(.el-button) {
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-button:not(:last-child)) {
+  margin-right: 12px;
+}
+
+:deep(.el-form-item:last-child) {
+  margin-top: 32px;
+}
+
+@media (max-width: 768px) {
+  .config-editor {
+    padding: 16px;
+    min-height: calc(100vh - 32px);
+  }
+
+  .config-editor h2 {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+  }
+
+  :deep(.el-form-item:last-child) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  :deep(.el-form-item:last-child .el-form-item__content) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :deep(.el-button) {
+    width: 100%;
+    margin-right: 0 !important;
+  }
 }
 </style>

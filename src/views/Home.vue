@@ -75,44 +75,97 @@ const handleDeployClick = () => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-color: #f0f2f5;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+  padding: 40px;
 }
 
 .welcome-title {
-  font-size: 2.5rem;
-  color: #303133;
+  font-size: 3rem;
+  color: var(--text-color);
   margin-bottom: 2rem;
   text-align: center;
+  font-weight: 600;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  animation: fadeInDown 0.8s ease-out;
 }
 
 .setup-alert {
   max-width: 600px;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  animation: fadeIn 0.8s ease-out 0.2s both;
 }
 
 .button-container {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
 }
 
 .el-button {
-  padding: 15px 30px;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
+  padding: 18px 36px;
+  font-size: 1.2rem;
+  border-radius: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
-.el-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.el-button [class^='el-icon'] {
+  font-size: 1.4rem;
+  margin-right: 8px;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 768px) {
+  .home-container {
+    padding: 20px;
+  }
+
   .welcome-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 
   .button-container {
     flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .el-button {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 1.1rem;
   }
 
   .setup-alert {

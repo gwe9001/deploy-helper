@@ -32,7 +32,7 @@ const showMenu = async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: #f5f7fa;
+  background-color: var(--background-color);
 }
 
 .title-bar {
@@ -40,31 +40,35 @@ const showMenu = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fff;
-  color: #2c3e50;
+  background: linear-gradient(to right, #ffffff, #f8f9fa);
+  color: var(--text-color);
   -webkit-app-region: drag;
   user-select: none;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 8px;
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 .left-section {
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
 .app-icon-wrapper {
-  width: 24px;
-  height: 24px;
-  margin-left: 5px;
-  border-radius: 20%;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
   -webkit-app-region: no-drag;
-  transition: transform 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-icon-wrapper:hover {
   transform: scale(1.1);
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .app-icon {
@@ -74,8 +78,11 @@ const showMenu = async () => {
 }
 
 .app-name {
-  margin-left: 10px;
-  font-weight: bold;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  opacity: 0.9;
+  letter-spacing: 0.5px;
 }
 
 .content-wrapper {
@@ -83,6 +90,7 @@ const showMenu = async () => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .content-area {
@@ -90,11 +98,33 @@ const showMenu = async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  background-color: var(--background-color);
 }
 
 .main-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .title-bar {
+    height: 40px;
+  }
+
+  .app-icon-wrapper {
+    width: 24px;
+    height: 24px;
+  }
+
+  .app-name {
+    font-size: 1rem;
+  }
+
+  .main-content {
+    padding: 16px;
+  }
 }
 </style>
