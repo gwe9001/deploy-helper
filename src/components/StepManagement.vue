@@ -232,6 +232,32 @@
             <el-option label="PowerShell" value="powershell" />
           </el-select>
         </el-form-item>
+
+        <el-form-item>
+          <template #label>
+            <div class="tooltip-label">
+              <span>編輯檔案</span>
+              <el-tooltip content="選擇是否編輯檔案" placement="top">
+                <el-icon class="tooltip-icon"><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="step-switch">
+            <el-switch v-model="editingStep.editFile" />
+            <el-input
+              v-if="editingStep.editFile"
+              v-model="editingStep.filePath"
+              placeholder="請輸入檔案路徑"
+            />
+            <el-input
+              v-if="editingStep.editFile"
+              v-model="editingStep.fileContent"
+              type="textarea"
+              :rows="3"
+              placeholder="請輸入檔案內容"
+            />
+          </div>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -278,6 +304,9 @@ const addStep = () => {
     hasOutputReference: false,
     hasDirectory: false,
     shellType: 'bash',
+    editFile: false,
+    filePath: '',
+    fileContent: '',
   }
   dialogVisible.value = true
 }

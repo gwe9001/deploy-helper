@@ -380,6 +380,7 @@ const replaceVariables = (command: string, repo: Repo): string => {
     tempPath: config.value().tempPath,
     env: selectedEnvironment.value,
     todayString: getCurrentDateYYYYMMDD(),
+    fileContent: currentStepData.value?.fileContent || '',
   }
 
   log.info(variables)
@@ -428,7 +429,14 @@ const executeStep = async () => {
       output.value += `步驟 ${step.name}\n執行 ${repo.name}:\n${command}\n\n`
 
       try {
-        if (step.executionMode === 'sync') {
+        if (step.editFile && step.filePath && step.fileContent) {
+          await window.electron.ipcRenderer.invoke(
+            'edit-file',
+            step.filePath,
+            replaceVariables(step.fileContent, repo),
+          )
+          output.value += `[${repo.name}] 檔案已編輯: ${step.filePath}\n\n`
+        } else if (step.executionMode === 'sync') {
           const result = await window.electron.ipcRenderer.invoke(
             'execute-command',
             command,

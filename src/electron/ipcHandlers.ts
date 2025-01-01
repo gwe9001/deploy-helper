@@ -103,6 +103,16 @@ async function executeCommandStream(
   })
 }
 
+async function editFile(filePath: string, content: string): Promise<void> {
+  try {
+    await fs.writeFile(filePath, content, { encoding: 'utf-8' })
+    log.info(`File edited successfully: ${filePath}`)
+  } catch (error) {
+    log.error(`Error editing file: ${filePath}`, error)
+    throw error
+  }
+}
+
 export function setupIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('open-external', async (event, url) => {
     await shell.openExternal(url)
@@ -168,6 +178,16 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
       }
     },
   )
+
+  ipcMain.handle('edit-file', async (event, filePath, content) => {
+    try {
+      await editFile(filePath, content)
+      return 'File edited successfully'
+    } catch (error) {
+      log.error('Error editing file:', error)
+      return `Error: ${error.message}`
+    }
+  })
 
   ipcMain.handle('export-config', async (event, filePath) => {
     try {
