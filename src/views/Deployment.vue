@@ -137,6 +137,9 @@
                   placeholder="請輸入檔案內容"
                 />
               </el-form-item>
+              <el-form-item>
+                <el-button @click="saveFileContent" type="primary">儲存檔案</el-button>
+              </el-form-item>
             </el-form>
           </div>
 
@@ -581,6 +584,21 @@ const getStatusText = (status: string | undefined) => {
 
 const removeRepo = (repo: string) => {
   selectedRepos.value = selectedRepos.value.filter((r) => r !== repo)
+}
+
+const saveFileContent = async () => {
+  if (currentStepData.value?.filePath && currentStepData.value?.fileContent) {
+    try {
+      await window.electron.ipcRenderer.invoke(
+        'edit-file',
+        currentStepData.value.filePath,
+        currentStepData.value.fileContent,
+      )
+      ElMessage.success('檔案已儲存')
+    } catch (error) {
+      ElMessage.error('儲存檔案時發生錯誤')
+    }
+  }
 }
 
 onMounted(() => {
