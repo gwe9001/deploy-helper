@@ -135,6 +135,7 @@
                   type="textarea"
                   v-model="currentStepData.fileContent"
                   placeholder="請輸入檔案內容"
+                  class="file-content-input"
                 />
               </el-form-item>
               <el-form-item>
@@ -215,6 +216,8 @@ import config from '../config'
 import log from 'electron-log/renderer'
 import { ElMessage } from 'element-plus'
 import { Step, StepCombination, Project, Repo } from '../config'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
 
 interface InputValues {
   [repo: string]: { [field: string]: string }
@@ -600,6 +603,15 @@ const saveFileContent = async () => {
     }
   }
 }
+
+const highlightFileContent = () => {
+  const fileContentInput = document.querySelector('.file-content-input textarea')
+  if (fileContentInput) {
+    hljs.highlightBlock(fileContentInput)
+  }
+}
+
+watch(() => currentStepData.value?.fileContent, highlightFileContent)
 
 onMounted(() => {
   // 預設選擇第一個組合
