@@ -122,6 +122,22 @@
                 />
               </el-form-item>
             </el-form>
+
+            <el-form v-if="currentStepData.editFile">
+              <el-form-item label="檔案路徑">
+                <el-input
+                  v-model="currentStepData.filePath"
+                  placeholder="請輸入檔案路徑"
+                />
+              </el-form-item>
+              <el-form-item label="檔案內容">
+                <el-input
+                  type="textarea"
+                  v-model="currentStepData.fileContent"
+                  placeholder="請輸入檔案內容"
+                />
+              </el-form-item>
+            </el-form>
           </div>
 
           <div class="button-group">
