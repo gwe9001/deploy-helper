@@ -113,6 +113,17 @@ async function editFile(filePath: string, content: string): Promise<void> {
   }
 }
 
+async function readFile(filePath: string): Promise<string> {
+  try {
+    const content = await fs.readFile(filePath, { encoding: 'utf-8' })
+    log.info(`File read successfully: ${filePath}`)
+    return content
+  } catch (error) {
+    log.error(`Error reading file: ${filePath}`, error)
+    throw error
+  }
+}
+
 export function setupIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('open-external', async (event, url) => {
     await shell.openExternal(url)
@@ -185,6 +196,16 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
       return 'File edited successfully'
     } catch (error) {
       log.error('Error editing file:', error)
+      return `Error: ${error.message}`
+    }
+  })
+
+  ipcMain.handle('read-file', async (event, filePath) => {
+    try {
+      const content = await readFile(filePath)
+      return content
+    } catch (error) {
+      log.error('Error reading file:', error)
       return `Error: ${error.message}`
     }
   })

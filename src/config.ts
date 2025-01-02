@@ -50,9 +50,9 @@ export interface Step {
   hasDirectory: boolean
   executionMode: 'sync' | 'async'
   shellType: 'bash' | 'powershell'
-  editFile?: boolean // P915e
-  filePath?: string // P7c28
-  fileContent?: string // P7c28
+  editFile?: boolean
+  filePath?: string
+  fileContent?: string
 }
 
 export interface StepCombination {

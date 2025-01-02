@@ -59,9 +59,9 @@
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "electron-log": "^5.2.0",
+    "highlight.js": "^11.11.1",
     "update-electron-app": "^3.0.0",
-    "vue-draggable-plus": "^0.5.3",
-    "highlight.js": "11.11.1"
+    "vue-draggable-plus": "^0.5.3"
   },
   "lint-staged": {
     "*.{vue,js,jsx,ts,tsx,json,css,scss,md}": "prettier --write"

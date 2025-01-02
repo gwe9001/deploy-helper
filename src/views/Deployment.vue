@@ -139,9 +139,7 @@
                 />
               </el-form-item>
               <el-form-item>
-                <el-button @click="saveFileContent" type="primary"
-                  >儲存檔案</el-button
-                >
+                <el-button @click="saveFileContent" type="primary">儲存檔案</el-button>
               </el-form-item>
             </el-form>
           </div>
@@ -607,9 +605,7 @@ const saveFileContent = async () => {
 }
 
 const highlightFileContent = () => {
-  const fileContentInput = document.querySelector(
-    '.file-content-input textarea',
-  )
+  const fileContentInput = document.querySelector('.file-content-input textarea')
   if (fileContentInput) {
     hljs.highlightBlock(fileContentInput)
   }
@@ -633,6 +629,16 @@ onMounted(() => {
   window.electron.ipcRenderer.on('command-error', (data: string) => {
     output.value += `<span style="color: red;">${data}</span>`
   })
+
+  if (currentStepData.value?.editFile && currentStepData.value?.filePath) {
+    window.electron.ipcRenderer.invoke('read-file', currentStepData.value.filePath)
+      .then((content: string) => {
+        currentStepData.value!.fileContent = content
+      })
+      .catch((error: any) => {
+        ElMessage.error('讀取檔案時發生錯誤')
+      })
+  }
 })
 
 onUnmounted(() => {
@@ -828,7 +834,6 @@ onUnmounted(() => {
   padding: 25px;
   background-color: var(--el-bg-color-page);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 :deep(.el-step) {
