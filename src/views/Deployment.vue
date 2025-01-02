@@ -122,6 +122,28 @@
                 />
               </el-form-item>
             </el-form>
+
+            <el-form v-if="currentStepData.editFile">
+              <el-form-item label="檔案路徑">
+                <el-input
+                  v-model="currentStepData.filePath"
+                  placeholder="請輸入檔案路徑"
+                />
+              </el-form-item>
+              <el-form-item label="檔案內容">
+                <el-input
+                  type="textarea"
+                  v-model="currentStepData.fileContent"
+                  placeholder="請輸入檔案內容"
+                  class="file-content-input"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button @click="saveFileContent" type="primary"
+                  >儲存檔案</el-button
+                >
+              </el-form-item>
+            </el-form>
           </div>
 
           <div class="button-group">
@@ -196,6 +218,8 @@ import config from '../config'
 import log from 'electron-log/renderer'
 import { ElMessage } from 'element-plus'
 import { Step, StepCombination, Project, Repo } from '../config'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
 
 interface InputValues {
   [repo: string]: { [field: string]: string }
@@ -566,6 +590,32 @@ const getStatusText = (status: string | undefined) => {
 const removeRepo = (repo: string) => {
   selectedRepos.value = selectedRepos.value.filter((r) => r !== repo)
 }
+
+const saveFileContent = async () => {
+  if (currentStepData.value?.filePath && currentStepData.value?.fileContent) {
+    try {
+      await window.electron.ipcRenderer.invoke(
+        'edit-file',
+        currentStepData.value.filePath,
+        currentStepData.value.fileContent,
+      )
+      ElMessage.success('檔案已儲存')
+    } catch (error) {
+      ElMessage.error('儲存檔案時發生錯誤')
+    }
+  }
+}
+
+const highlightFileContent = () => {
+  const fileContentInput = document.querySelector(
+    '.file-content-input textarea',
+  )
+  if (fileContentInput) {
+    hljs.highlightBlock(fileContentInput)
+  }
+}
+
+watch(() => currentStepData.value?.fileContent, highlightFileContent)
 
 onMounted(() => {
   // 預設選擇第一個組合
