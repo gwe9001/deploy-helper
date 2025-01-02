@@ -122,6 +122,26 @@
                 />
               </el-form-item>
             </el-form>
+
+            <el-form v-if="currentStepData.editFile">
+              <el-form-item label="檔案路徑">
+                <el-input
+                  v-model="currentStepData.filePath"
+                  placeholder="請輸入檔案路徑"
+                />
+              </el-form-item>
+              <el-form-item label="檔案內容">
+                <el-input
+                  type="textarea"
+                  v-model="currentStepData.fileContent"
+                  placeholder="請輸入檔案內容"
+                  class="file-content-input"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button @click="saveFileContent" type="primary">儲存檔案</el-button>
+              </el-form-item>
+            </el-form>
           </div>
 
           <div class="button-group">
@@ -196,6 +216,8 @@ import config from '../config'
 import log from 'electron-log/renderer'
 import { ElMessage } from 'element-plus'
 import { Step, StepCombination, Project, Repo } from '../config'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
 
 interface InputValues {
   [repo: string]: { [field: string]: string }
@@ -380,6 +402,7 @@ const replaceVariables = (command: string, repo: Repo): string => {
     tempPath: config.value().tempPath,
     env: selectedEnvironment.value,
     todayString: getCurrentDateYYYYMMDD(),
+    fileContent: currentStepData.value?.fileContent || '',
   }
 
   log.info(variables)
@@ -428,7 +451,14 @@ const executeStep = async () => {
       output.value += `步驟 ${step.name}\n執行 ${repo.name}:\n${command}\n\n`
 
       try {
-        if (step.executionMode === 'sync') {
+        if (step.editFile && step.filePath && step.fileContent) {
+          await window.electron.ipcRenderer.invoke(
+            'edit-file',
+            step.filePath,
+            replaceVariables(step.fileContent, repo),
+          )
+          output.value += `[${repo.name}] 檔案已編輯: ${step.filePath}\n\n`
+        } else if (step.executionMode === 'sync') {
           const result = await window.electron.ipcRenderer.invoke(
             'execute-command',
             command,
@@ -559,6 +589,30 @@ const removeRepo = (repo: string) => {
   selectedRepos.value = selectedRepos.value.filter((r) => r !== repo)
 }
 
+const saveFileContent = async () => {
+  if (currentStepData.value?.filePath && currentStepData.value?.fileContent) {
+    try {
+      await window.electron.ipcRenderer.invoke(
+        'edit-file',
+        currentStepData.value.filePath,
+        currentStepData.value.fileContent,
+      )
+      ElMessage.success('檔案已儲存')
+    } catch (error) {
+      ElMessage.error('儲存檔案時發生錯誤')
+    }
+  }
+}
+
+const highlightFileContent = () => {
+  const fileContentInput = document.querySelector('.file-content-input textarea')
+  if (fileContentInput) {
+    hljs.highlightBlock(fileContentInput)
+  }
+}
+
+watch(() => currentStepData.value?.fileContent, highlightFileContent)
+
 onMounted(() => {
   // 預設選擇第一個組合
   if (availableStepCombinations.value.length > 0) {
@@ -575,6 +629,16 @@ onMounted(() => {
   window.electron.ipcRenderer.on('command-error', (data: string) => {
     output.value += `<span style="color: red;">${data}</span>`
   })
+
+  if (currentStepData.value?.editFile && currentStepData.value?.filePath) {
+    window.electron.ipcRenderer.invoke('read-file', currentStepData.value.filePath)
+      .then((content: string) => {
+        currentStepData.value!.fileContent = content
+      })
+      .catch((error: any) => {
+        ElMessage.error('讀取檔案時發生錯誤')
+      })
+  }
 })
 
 onUnmounted(() => {
@@ -770,7 +834,6 @@ onUnmounted(() => {
   padding: 25px;
   background-color: var(--el-bg-color-page);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 :deep(.el-step) {

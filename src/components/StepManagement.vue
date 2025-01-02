@@ -232,6 +232,34 @@
             <el-option label="PowerShell" value="powershell" />
           </el-select>
         </el-form-item>
+
+        <el-form-item>
+          <template #label>
+            <div class="tooltip-label">
+              <span>編輯檔案</span>
+              <el-tooltip content="選擇是否編輯檔案" placement="top">
+                <el-icon class="tooltip-icon"><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="step-switch">
+            <el-switch v-model="editingStep.editFile" />
+            <el-input
+              v-if="editingStep.editFile"
+              v-model="editingStep.filePath"
+              placeholder="請輸入檔案路徑"
+              class="file-path-input"
+            />
+            <el-input
+              v-if="editingStep.editFile"
+              v-model="editingStep.fileContent"
+              type="textarea"
+              :rows="10"
+              placeholder="請輸入檔案內容"
+              class="file-content-input"
+            />
+          </div>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -245,11 +273,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, InfoFilled } from '@element-plus/icons-vue'
 import config from '../config'
 import { Step } from '../config'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
 
 const steps = ref<Step[]>([])
 const dialogVisible = ref(false)
@@ -278,6 +308,9 @@ const addStep = () => {
     hasOutputReference: false,
     hasDirectory: false,
     shellType: 'bash',
+    editFile: false,
+    filePath: '',
+    fileContent: '',
   }
   dialogVisible.value = true
 }
@@ -347,6 +380,15 @@ const getPreviousOutputs = (currentStep: Step) => {
   }
   return outputs
 }
+
+const highlightFileContent = () => {
+  const fileContentInput = document.querySelector('.file-content-input textarea')
+  if (fileContentInput) {
+    hljs.highlightBlock(fileContentInput)
+  }
+}
+
+watch(() => editingStep.value?.fileContent, highlightFileContent)
 </script>
 
 <style scoped>
@@ -495,6 +537,22 @@ const getPreviousOutputs = (currentStep: Step) => {
   gap: 16px;
   padding-top: 24px;
   border-top: 1px solid var(--border-color);
+}
+
+.file-path-input {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.file-content-input {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  font-family: monospace;
+  line-height: 1.6;
 }
 
 @media (max-width: 768px) {

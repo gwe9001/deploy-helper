@@ -4,6 +4,7 @@ import path from 'path'
 import Store from 'electron-store'
 import log from 'electron-log/main'
 import { exec, spawn } from 'child_process'
+import { StringDecoder } from 'string_decoder'
 
 const store = new Store()
 const isDev = !app.isPackaged
@@ -101,6 +102,18 @@ async function executeCommandStream(
       }
     })
   })
+}
+
+async function editFile(filePath: string, fileContent: string): Promise<void> {
+  const decoder = new StringDecoder('utf8')
+  const decodedPath = decoder.write(Buffer.from(filePath, 'binary'))
+  await fs.writeFile(decodedPath, fileContent, { encoding: 'utf8' })
+}
+
+async function readFile(filePath: string): Promise<string> {
+  const decoder = new StringDecoder('utf8')
+  const decodedPath = decoder.write(Buffer.from(filePath, 'binary'))
+  return await fs.readFile(decodedPath, 'utf8')
 }
 
 export function setupIpcHandlers(mainWindow: BrowserWindow): void {
@@ -219,5 +232,13 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.on('close-window', () => {
     mainWindow.close()
+  })
+
+  ipcMain.handle('edit-file', async (event, filePath, fileContent) => {
+    await editFile(filePath, fileContent)
+  })
+
+  ipcMain.handle('read-file', async (event, filePath) => {
+    return await readFile(filePath)
   })
 }
