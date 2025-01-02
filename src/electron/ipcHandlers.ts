@@ -4,6 +4,7 @@ import path from 'path'
 import Store from 'electron-store'
 import log from 'electron-log/main'
 import { exec, spawn } from 'child_process'
+import { StringDecoder } from 'string_decoder'
 
 const store = new Store()
 const isDev = !app.isPackaged
@@ -103,25 +104,16 @@ async function executeCommandStream(
   })
 }
 
-async function editFile(filePath: string, content: string): Promise<void> {
-  try {
-    await fs.writeFile(filePath, content, { encoding: 'utf-8' })
-    log.info(`File edited successfully: ${filePath}`)
-  } catch (error) {
-    log.error(`Error editing file: ${filePath}`, error)
-    throw error
-  }
+async function editFile(filePath: string, fileContent: string): Promise<void> {
+  const decoder = new StringDecoder('utf8')
+  const decodedPath = decoder.write(Buffer.from(filePath, 'binary'))
+  await fs.writeFile(decodedPath, fileContent, { encoding: 'utf8' })
 }
 
 async function readFile(filePath: string): Promise<string> {
-  try {
-    const content = await fs.readFile(filePath, { encoding: 'utf-8' })
-    log.info(`File read successfully: ${filePath}`)
-    return content
-  } catch (error) {
-    log.error(`Error reading file: ${filePath}`, error)
-    throw error
-  }
+  const decoder = new StringDecoder('utf8')
+  const decodedPath = decoder.write(Buffer.from(filePath, 'binary'))
+  return await fs.readFile(decodedPath, 'utf8')
 }
 
 export function setupIpcHandlers(mainWindow: BrowserWindow): void {
@@ -190,26 +182,6 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
     },
   )
 
-  ipcMain.handle('edit-file', async (event, filePath, content) => {
-    try {
-      await editFile(filePath, content)
-      return 'File edited successfully'
-    } catch (error) {
-      log.error('Error editing file:', error)
-      return `Error: ${error.message}`
-    }
-  })
-
-  ipcMain.handle('read-file', async (event, filePath) => {
-    try {
-      const content = await readFile(filePath)
-      return content
-    } catch (error) {
-      log.error('Error reading file:', error)
-      return `Error: ${error.message}`
-    }
-  })
-
   ipcMain.handle('export-config', async (event, filePath) => {
     try {
       const config = store.store
@@ -260,5 +232,13 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.on('close-window', () => {
     mainWindow.close()
+  })
+
+  ipcMain.handle('edit-file', async (event, filePath, fileContent) => {
+    await editFile(filePath, fileContent)
+  })
+
+  ipcMain.handle('read-file', async (event, filePath) => {
+    return await readFile(filePath)
   })
 }
