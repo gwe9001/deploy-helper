@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from '#imports'
 import StepManagement from './StepManagement.vue'
 import DeploymentWorkflow from './DeploymentWorkflow.vue'
 import CombinationManagement from './CombinationManagement.vue'

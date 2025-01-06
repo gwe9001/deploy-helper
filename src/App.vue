@@ -2,11 +2,7 @@
   <CustomFrame>
     <Header />
     <div class="main-content">
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <NuxtPage />
     </div>
   </CustomFrame>
 </template>
@@ -14,7 +10,7 @@
 <script setup lang="ts">
 import Header from './components/Header.vue'
 import CustomFrame from './components/CustomFrame.vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref } from '#imports'
 
 const headerHeight = ref(0)
 

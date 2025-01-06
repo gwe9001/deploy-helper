@@ -23,7 +23,7 @@
       <el-button
         type="info"
         size="large"
-        @click="router.push('/settings')"
+        @click="navigateToSettings"
         :icon="Setting"
       >
         系統設定
@@ -33,13 +33,11 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { navigateTo } from '#imports'
 import { Setting, Upload } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import config from '../config'
 import { ElMessage } from 'element-plus'
-
-const router = useRouter()
 
 const hasProjectsAndSteps = computed(() => {
   const { projects, steps, stepCombinations } = config.value()
@@ -53,7 +51,7 @@ const hasProjectsAndSteps = computed(() => {
 
 const handleDeployClick = () => {
   if (hasProjectsAndSteps.value) {
-    router.push('/deployment')
+    navigateTo('/deployment')
   } else {
     if (config.value().projects.length === 0) {
       ElMessage.warning('請先在系統設定中添加至少一個專案。')
@@ -65,6 +63,10 @@ const handleDeployClick = () => {
       ElMessage.warning('請確保至少一個步驟組合包含部署步驟。')
     }
   }
+}
+
+const navigateToSettings = () => {
+  navigateTo('/settings')
 }
 </script>
 

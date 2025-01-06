@@ -79,13 +79,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from '#imports'
+import { navigateTo } from '#imports'
 import config from '../config'
 import { House, Link, Upload } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
-const router = useRouter()
 const projects = computed(() => config.value().projects)
 const environments = computed(() => config.value().environments)
 const selectedProject = ref(config.value().selectedProject || '')
@@ -103,7 +102,7 @@ const changeProject = () => {
 const changeEnvironment = () => {
   if (selectedEnvironment.value === 'manage-environments') {
     selectedEnvironment.value = config.value().selectedEnvironment
-    router.push('/settings')
+    navigateTo('/settings')
   } else {
     config.set('selectedEnvironment', selectedEnvironment.value)
     config.save()
@@ -125,7 +124,7 @@ const addNewProject = () => {
   config.set('selectedProject', newProject.id)
   config.save()
   ElMessage.success('新專案已創建，請在專案設定中進行配置。')
-  router.push('/settings')
+  navigateTo('/settings')
 }
 
 onMounted(() => {
@@ -153,7 +152,7 @@ watch(environments, (newEnvironments) => {
 
 const handleCommand = (type: string) => {
   if (type === 'home') {
-    router.push('/')
+    navigateTo('/')
   }
 }
 
@@ -191,7 +190,7 @@ const handleDeploy = () => {
     ElMessage.warning('請先選擇環境')
     return
   }
-  router.push('/deployment')
+  navigateTo('/deployment')
 }
 </script>
 <style scoped>

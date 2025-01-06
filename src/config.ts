@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref } from '#imports'
 import log from 'electron-log/renderer'
 import {
   migrateToV2,

@@ -167,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed } from '#imports'
 import { ElMessage } from 'element-plus'
 import { InfoFilled, Plus, Edit, View, Delete } from '@element-plus/icons-vue'
 import config from '../config'

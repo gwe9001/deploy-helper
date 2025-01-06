@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch } from '#imports'
 import { VueDraggable } from 'vue-draggable-plus'
 import { ElMessage } from 'element-plus'
 import { Rank } from '@element-plus/icons-vue'

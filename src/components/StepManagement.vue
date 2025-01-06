@@ -245,7 +245,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from '#imports'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, InfoFilled } from '@element-plus/icons-vue'
 import config from '../config'

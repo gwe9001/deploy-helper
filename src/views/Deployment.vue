@@ -191,7 +191,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, reactive, onMounted, onUnmounted } from '#imports'
 import config from '../config'
 import log from 'electron-log/renderer'
 import { ElMessage } from 'element-plus'

@@ -1,4 +1,4 @@
-import { ref, readonly } from 'vue'
+import { ref, readonly } from '#imports'
 import { Step, StepCombination, Project } from '../config'
 
 export interface Config {

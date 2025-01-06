@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref } from '#imports'
 import config from '../config'
 import { ElMessage } from 'element-plus'
 
