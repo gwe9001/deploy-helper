@@ -36,6 +36,12 @@
         </template>
       </el-table-column>
 
+      <el-table-column prop="preSelected" label="預設勾選" width="100">
+        <template #default="{ row }">
+          <el-checkbox v-model="row.preSelected" disabled></el-checkbox>
+        </template>
+      </el-table-column>
+
       <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
           <div class="step-actions">
@@ -288,6 +294,21 @@
             </div>
           </div>
         </el-form-item>
+
+        <el-form-item>
+          <template #label>
+            <div class="tooltip-label">
+              <span>預設勾選</span>
+              <el-tooltip
+                content="設定此步驟是否預設勾選"
+                placement="top"
+              >
+                <el-icon class="tooltip-icon"><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <el-checkbox v-model="editingStep.preSelected">預設勾選</el-checkbox>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -337,6 +358,7 @@ const addStep = () => {
     shellType: 'bash',
     hasEnvSpecificParams: false,
     envSpecificParams: [],
+    preSelected: false,
   }
   dialogVisible.value = true
 }
