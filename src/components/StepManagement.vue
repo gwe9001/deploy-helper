@@ -409,6 +409,9 @@ const getPreviousOutputs = (currentStep: Step) => {
 
 const addEnvSpecificParam = () => {
   if (editingStep.value) {
+    if (!editingStep.value.envSpecificParams) {
+      editingStep.value.envSpecificParams = []
+    }
     editingStep.value.envSpecificParams.push({
       key: '',
       value: '',
