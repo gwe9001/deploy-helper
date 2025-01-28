@@ -122,6 +122,19 @@
                 />
               </el-form-item>
             </el-form>
+
+            <el-form v-if="currentStepData.hasEnvironmentSpecificParameters">
+              <el-form-item
+                v-for="(param, index) in currentStepData.environmentSpecificParameters"
+                :key="index"
+                :label="param.name"
+              >
+                <el-input
+                  v-model="environmentSpecificParameters[param.name]"
+                  :placeholder="`請輸入 ${param.name} 的值`"
+                />
+              </el-form-item>
+            </el-form>
           </div>
 
           <div class="button-group">
@@ -230,6 +243,8 @@ const execution = ref(false)
 const repoExecutionStatus = reactive<{
   [repo: string]: 'pending' | 'success' | 'error'
 }>({})
+// 環境特定參數
+const environmentSpecificParameters = reactive<{ [key: string]: string }>({})
 
 // 可用的步驟組合
 const availableStepCombinations = computed<StepCombination[]>(() =>
@@ -303,6 +318,9 @@ const resetForm = () => {
   for (const repo in inputValues) {
     inputValues[repo] = {}
   }
+  for (const key in environmentSpecificParameters) {
+    delete environmentSpecificParameters[key]
+  }
   resetExecutionStatus()
 }
 
@@ -337,6 +355,12 @@ const validateInputs = (): boolean => {
     return false
 
   if (currentStepData.value.hasDirectory && !directoryValue.value) return false
+
+  if (
+    currentStepData.value.hasEnvironmentSpecificParameters &&
+    !Object.values(environmentSpecificParameters).every((value) => value)
+  )
+    return false
 
   return true
 }
@@ -375,6 +399,7 @@ watch(selectedRepos, (newRepos, oldRepos) => {
 const replaceVariables = (command: string, repo: Repo): string => {
   const variables: Record<string, string> = {
     ...inputValues[repo.name],
+    ...environmentSpecificParameters,
     repoPath: repo.path,
     projectPath: selectedProject.value?.path || '',
     tempPath: config.value().tempPath,

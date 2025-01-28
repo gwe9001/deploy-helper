@@ -44,11 +44,31 @@ export function useConfig() {
 
   const getConfig = () => config.value
 
+  const addEnvironmentSpecificParameter = (
+    stepId: string,
+    parameter: { name: string; value: string },
+  ) => {
+    const step = config.value.steps.find((s) => s.id === stepId)
+    if (step) {
+      if (!step.environmentSpecificParameters) {
+        step.environmentSpecificParameters = []
+      }
+      step.environmentSpecificParameters.push(parameter)
+    }
+  }
+
+  const getEnvironmentSpecificParameters = (stepId: string) => {
+    const step = config.value.steps.find((s) => s.id === stepId)
+    return step ? step.environmentSpecificParameters || [] : []
+  }
+
   return {
     config: readonly(config),
     getConfig,
     updateConfig,
     setSelectedProject,
     setSelectedEnvironment,
+    addEnvironmentSpecificParameter,
+    getEnvironmentSpecificParameters,
   }
 }

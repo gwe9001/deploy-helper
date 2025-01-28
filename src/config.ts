@@ -50,6 +50,12 @@ export interface Step {
   hasDirectory: boolean
   executionMode: 'sync' | 'async'
   shellType: 'bash' | 'powershell'
+  environmentSpecificParameters?: EnvironmentSpecificParameter[]
+}
+
+export interface EnvironmentSpecificParameter {
+  name: string
+  value: string
 }
 
 export interface StepCombination {
