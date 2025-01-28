@@ -395,6 +395,14 @@ const replaceVariables = (command: string, repo: Repo): string => {
     todayString: getCurrentDateYYYYMMDD(),
   }
 
+  if (currentStepData.value?.hasEnvSpecificParams) {
+    currentStepData.value.envSpecificParams.forEach((param) => {
+      if (param.environment === selectedEnvironment.value) {
+        variables[param.key] = param.value
+      }
+    })
+  }
+
   log.info(variables)
 
   return command.replace(/\{([^}]+)\}/g, (match, key) =>
@@ -952,3 +960,15 @@ onUnmounted(() => {
   }
 }
 </style>
+  if (currentStepData.value?.hasEnvSpecificParams) {
+    currentStepData.value.envSpecificParams.forEach((param) => {
+      if (param.environment === selectedEnvironment.value) {
+        variables[param.key] = param.value
+      }
+    })
+  }
+
+  log.info(variables)
+
+  return command.replace(/\{([^}]+)\}/g, (match, key) =>
+    variables[key] !== undefined ? variables[key] : match,

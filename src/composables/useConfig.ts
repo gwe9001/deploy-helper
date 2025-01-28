@@ -42,25 +42,14 @@ export function useConfig() {
     config.value = { ...config.value, selectedEnvironment: environment }
   }
 
-  const getConfig = () => config.value
-
-  const addEnvironmentSpecificParameter = (
-    stepId: string,
-    parameter: { name: string; value: string },
-  ) => {
-    const step = config.value.steps.find((s) => s.id === stepId)
+  const setEnvSpecificParams = (stepId: string, params: { key: string; value: string; environment: string }[]) => {
+    const step = config.value.steps.find(s => s.id === stepId)
     if (step) {
-      if (!step.environmentSpecificParameters) {
-        step.environmentSpecificParameters = []
-      }
-      step.environmentSpecificParameters.push(parameter)
+      step.envSpecificParams = params
     }
   }
 
-  const getEnvironmentSpecificParameters = (stepId: string) => {
-    const step = config.value.steps.find((s) => s.id === stepId)
-    return step ? step.environmentSpecificParameters || [] : []
-  }
+  const getConfig = () => config.value
 
   return {
     config: readonly(config),
@@ -68,7 +57,6 @@ export function useConfig() {
     updateConfig,
     setSelectedProject,
     setSelectedEnvironment,
-    addEnvironmentSpecificParameter,
-    getEnvironmentSpecificParameters,
+    setEnvSpecificParams,
   }
 }
