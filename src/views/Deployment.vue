@@ -124,16 +124,19 @@
             </el-form>
 
             <el-form v-if="currentStepData.hasEnvSpecificParams">
-              <el-form-item
-                v-for="(param, index) in currentStepData.envSpecificParams"
+              <el-row
+                v-for="(param, index) in filteredEnvSpecificParams"
                 :key="index"
-                :label="`參數 ${param.key} (${param.environment})`"
               >
-                <el-input
-                  v-model="param.value"
-                  :placeholder="`請輸入 ${param.key} 的值`"
-                />
-              </el-form-item>
+                <el-form-item
+                  :label="`參數 ${param.key} (${param.environment})`"
+                >
+                  <el-input
+                    v-model="param.value"
+                    :placeholder="`請輸入 ${param.key} 的值`"
+                  />
+                </el-form-item>
+              </el-row>
             </el-form>
           </div>
 
@@ -282,6 +285,15 @@ const canExecute = computed(() => {
     return false
   if (!validateInputs()) return false
   return true
+})
+
+// 環境特定參數
+const filteredEnvSpecificParams = computed(() => {
+  return (
+    currentStepData.value?.envSpecificParams.filter(
+      (param) => param.environment === selectedEnvironment.value,
+    ) || []
+  )
 })
 
 const completionPercentage = computed(() => {
@@ -960,15 +972,8 @@ onUnmounted(() => {
   }
 }
 </style>
-  if (currentStepData.value?.hasEnvSpecificParams) {
-    currentStepData.value.envSpecificParams.forEach((param) => {
-      if (param.environment === selectedEnvironment.value) {
-        variables[param.key] = param.value
-      }
-    })
-  }
-
-  log.info(variables)
-
-  return command.replace(/\{([^}]+)\}/g, (match, key) =>
-    variables[key] !== undefined ? variables[key] : match,
+if (currentStepData.value?.hasEnvSpecificParams) {
+currentStepData.value.envSpecificParams.forEach((param) => { if
+(param.environment === selectedEnvironment.value) { variables[param.key] =
+param.value } }) } log.info(variables) return command.replace(/\{([^}]+)\}/g,
+(match, key) => variables[key] !== undefined ? variables[key] : match,
