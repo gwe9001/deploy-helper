@@ -138,10 +138,6 @@
                 </el-form-item>
               </el-row>
             </el-form>
-
-            <el-form-item label="使用此參數">
-              <el-checkbox v-model="useParameter">使用</el-checkbox>
-            </el-form-item>
           </div>
 
           <div class="button-group">
@@ -250,8 +246,6 @@ const execution = ref(false)
 const repoExecutionStatus = reactive<{
   [repo: string]: 'pending' | 'success' | 'error'
 }>({})
-// 使用參數
-const useParameter = ref(false)
 
 // 可用的步驟組合
 const availableStepCombinations = computed<StepCombination[]>(() =>
@@ -297,8 +291,7 @@ const canExecute = computed(() => {
 const filteredEnvSpecificParams = computed(() => {
   return (
     currentStepData.value?.envSpecificParams.filter(
-      (param) =>
-        param.environment === selectedEnvironment.value && useParameter.value,
+      (param) => param.environment === selectedEnvironment.value,
     ) || []
   )
 })
@@ -414,7 +407,7 @@ const replaceVariables = (command: string, repo: Repo): string => {
     todayString: getCurrentDateYYYYMMDD(),
   }
 
-  if (currentStepData.value?.hasEnvSpecificParams && useParameter.value) {
+  if (currentStepData.value?.hasEnvSpecificParams) {
     currentStepData.value.envSpecificParams.forEach((param) => {
       if (param.environment === selectedEnvironment.value) {
         variables[param.key] = param.value
@@ -979,3 +972,8 @@ onUnmounted(() => {
   }
 }
 </style>
+if (currentStepData.value?.hasEnvSpecificParams) {
+currentStepData.value.envSpecificParams.forEach((param) => { if
+(param.environment === selectedEnvironment.value) { variables[param.key] =
+param.value } }) } log.info(variables) return command.replace(/\{([^}]+)\}/g,
+(match, key) => variables[key] !== undefined ? variables[key] : match,
