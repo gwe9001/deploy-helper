@@ -6,10 +6,15 @@
   "repository": "github:gwe9001/deploy-helper",
   "main": ".vite/build/main.js",
   "scripts": {
+    "dev": "concurrently \"npm run dev:nuxt\" \"npm run dev:electron\"",
+    "dev:nuxt": "nuxt dev",
+    "dev:electron": "electron-forge start",
+    "build": "nuxt generate && electron-forge package",
+    "generate": "nuxt generate",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "make": "nuxt generate && electron-forge make",
+    "publish": "nuxt generate && electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "prepare": "husky"
   },
@@ -30,6 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
     "@vitejs/plugin-vue": "^5.1.4",
+    "concurrently": "^9.2.0",
     "electron": "32.1.2",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^10.0.0",
@@ -58,7 +64,9 @@
   "license": "MIT",
   "dependencies": {
     "@electron/remote": "^2.1.2",
+    "@element-plus/nuxt": "^1.1.4",
     "electron-log": "^5.2.0",
+    "nuxt": "^3.17.7",
     "update-electron-app": "^3.0.0",
     "vue-draggable-plus": "^0.5.3"
   },
