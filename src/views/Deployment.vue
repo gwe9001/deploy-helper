@@ -122,6 +122,22 @@
                 />
               </el-form-item>
             </el-form>
+
+            <el-form v-if="currentStepData.hasEnvSpecificParams">
+              <el-row
+                v-for="(param, index) in filteredEnvSpecificParams"
+                :key="index"
+              >
+                <el-form-item
+                  :label="`參數 ${param.key} (${param.environment})`"
+                >
+                  <el-input
+                    v-model="param.value"
+                    :placeholder="`請輸入 ${param.key} 的值`"
+                  />
+                </el-form-item>
+              </el-row>
+            </el-form>
           </div>
 
           <div class="button-group">
@@ -271,6 +287,15 @@ const canExecute = computed(() => {
   return true
 })
 
+// 環境特定參數
+const filteredEnvSpecificParams = computed(() => {
+  return (
+    currentStepData.value?.envSpecificParams.filter(
+      (param) => param.environment === selectedEnvironment.value,
+    ) || []
+  )
+})
+
 const completionPercentage = computed(() => {
   const totalRepos = selectedRepos.value.length
   const completedRepos = Object.values(repoExecutionStatus).filter(
@@ -380,6 +405,14 @@ const replaceVariables = (command: string, repo: Repo): string => {
     tempPath: config.value().tempPath,
     env: selectedEnvironment.value,
     todayString: getCurrentDateYYYYMMDD(),
+  }
+
+  if (currentStepData.value?.hasEnvSpecificParams) {
+    currentStepData.value.envSpecificParams.forEach((param) => {
+      if (param.environment === selectedEnvironment.value) {
+        variables[param.key] = param.value
+      }
+    })
   }
 
   log.info(variables)
@@ -939,3 +972,8 @@ onUnmounted(() => {
   }
 }
 </style>
+if (currentStepData.value?.hasEnvSpecificParams) {
+currentStepData.value.envSpecificParams.forEach((param) => { if
+(param.environment === selectedEnvironment.value) { variables[param.key] =
+param.value } }) } log.info(variables) return command.replace(/\{([^}]+)\}/g,
+(match, key) => variables[key] !== undefined ? variables[key] : match,

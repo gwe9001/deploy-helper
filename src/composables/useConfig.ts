@@ -42,6 +42,13 @@ export function useConfig() {
     config.value = { ...config.value, selectedEnvironment: environment }
   }
 
+  const setEnvSpecificParams = (stepId: string, params: { key: string; value: string; environment: string }[]) => {
+    const step = config.value.steps.find(s => s.id === stepId)
+    if (step) {
+      step.envSpecificParams = params
+    }
+  }
+
   const getConfig = () => config.value
 
   return {
@@ -50,5 +57,6 @@ export function useConfig() {
     updateConfig,
     setSelectedProject,
     setSelectedEnvironment,
+    setEnvSpecificParams,
   }
 }
