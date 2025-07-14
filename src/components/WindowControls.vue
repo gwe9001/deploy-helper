@@ -4,7 +4,10 @@
       <el-icon><Minus /></el-icon>
     </button>
     <button @click="maximize" class="control-button">
-      <el-icon><FullScreen /></el-icon>
+      <el-icon>
+        <FullScreen v-if="!isMaximized" />
+        <CopyDocument v-else />
+      </el-icon>
     </button>
     <button @click="close" class="control-button close">
       <el-icon><Close /></el-icon>
@@ -13,7 +16,10 @@
 </template>
 
 <script setup lang="ts">
-import { Minus, FullScreen, Close } from '@element-plus/icons-vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { Minus, FullScreen, Close, CopyDocument } from '@element-plus/icons-vue'
+
+const isMaximized = ref(false)
 
 const minimize = async () => {
   await window.electron.ipcRenderer.send('minimize-window')
@@ -26,6 +32,32 @@ const maximize = async () => {
 const close = async () => {
   await window.electron.ipcRenderer.send('close-window')
 }
+
+// 監聽視窗狀態變化
+const handleWindowMaximized = () => {
+  isMaximized.value = true
+}
+
+const handleWindowUnmaximized = () => {
+  isMaximized.value = false
+}
+
+onMounted(() => {
+  // 監聽來自主程序的視窗狀態變化事件
+  window.electron.ipcRenderer.on('window-maximized', handleWindowMaximized)
+  window.electron.ipcRenderer.on('window-unmaximized', handleWindowUnmaximized)
+  
+  // 初始化時獲取視窗狀態
+  window.electron.ipcRenderer.invoke('get-window-state').then((state) => {
+    isMaximized.value = state.isMaximized
+  })
+})
+
+onUnmounted(() => {
+  // 清理事件監聽器
+  window.electron.ipcRenderer.removeListener('window-maximized', handleWindowMaximized)
+  window.electron.ipcRenderer.removeListener('window-unmaximized', handleWindowUnmaximized)
+})
 </script>
 
 <style scoped>

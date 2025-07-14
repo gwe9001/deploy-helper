@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send(channel, ...args),
     removeAllListeners: (channel: string) =>
       ipcRenderer.removeAllListeners(channel),
+    removeListener: (channel: string, listener: (...args: never[]) => void) =>
+      ipcRenderer.removeListener(channel, listener),
     setStoreValue: (key: string, value: never) => {
       ipcRenderer.send('setStore', key, value)
     },

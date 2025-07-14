@@ -45,9 +45,12 @@ const createWindow = () => {
 
   enable(mainWindow.webContents)
 
+  // 開發模式使用 Nuxt dev server
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
+    // 開發時指向 Nuxt dev server (port 3000)
+    mainWindow.loadURL('http://localhost:3000')
   } else {
+    // 生產模式載入建置後的檔案
     mainWindow.loadFile(
       path.join(
         __dirname,
