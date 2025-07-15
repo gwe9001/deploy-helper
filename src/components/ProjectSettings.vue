@@ -194,6 +194,85 @@
         </el-tab-pane>
 
         <el-tab-pane label="Registry">
+          <!-- 批次更新密碼區域 -->
+          <div class="batch-update-section">
+            <el-card class="batch-update-card">
+              <template #header>
+                <span>批次更新Registry密碼</span>
+              </template>
+              <el-form label-width="120px">
+                <el-form-item label="目標環境">
+                  <el-select 
+                    v-model="batchUpdateEnv" 
+                    placeholder="請選擇要更新的環境"
+                    style="width: 200px;"
+                  >
+                    <el-option
+                      v-for="env in environments"
+                      :key="env"
+                      :label="env"
+                      :value="env"
+                    />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="新密碼">
+                  <el-input
+                    v-model="batchUpdatePassword"
+                    placeholder="請輸入新密碼"
+                    type="password"
+                    show-password
+                    style="width: 300px;"
+                  />
+                </el-form-item>
+                <el-form-item>
+                  <el-button 
+                    type="primary" 
+                    @click="batchUpdatePasswords"
+                    :disabled="!batchUpdateEnv || !batchUpdatePassword"
+                  >
+                    更新所有專案的此環境密碼
+                  </el-button>
+                  <el-button 
+                    type="warning" 
+                    @click="showBatchUpdateDialog"
+                    :disabled="!batchUpdatePassword"
+                  >
+                    更新所有專案的所有環境密碼
+                  </el-button>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </div>
+
+          <!-- 批次更新確認對話框 -->
+          <el-dialog
+            v-model="batchUpdateDialogVisible"
+            title="確認批次更新"
+            width="50%"
+          >
+            <div>
+              <p>此操作將會更新所有專案在所有環境的Registry密碼。</p>
+              <p><strong>影響範圍：</strong></p>
+              <ul>
+                <li>專案數量：{{ allProjects.length }}</li>
+                <li>環境數量：{{ environments.length }}</li>
+                <li>總共將更新：{{ allProjects.length * environments.length }} 個Registry密碼</li>
+              </ul>
+              <p><strong>注意：此操作無法復原，請確認新密碼正確無誤。</strong></p>
+            </div>
+            <template #footer>
+              <span class="dialog-footer">
+                <el-button @click="batchUpdateDialogVisible = false">取消</el-button>
+                <el-button type="danger" @click="batchUpdateAllPasswords">
+                  確認更新所有密碼
+                </el-button>
+              </span>
+            </template>
+          </el-dialog>
+
+          <el-divider />
+
+          <!-- 原有的單一專案Registry設定 -->
           <el-form label-width="120px">
             <el-form-item label="環境">
               <el-select v-model="selectedEnv" placeholder="請選擇環境">
@@ -263,6 +342,12 @@ const batchImportPaths = ref('')
 
 const selectedEnv = ref('')
 const environments = computed(() => config.value().environments)
+
+// 批次更新Registry密碼相關變數
+const batchUpdateEnv = ref('')
+const batchUpdatePassword = ref('')
+const batchUpdateDialogVisible = ref(false)
+const allProjects = computed(() => config.value().projects)
 
 const currentDockerLogin = ref({
   registry: '',
@@ -418,6 +503,76 @@ const performBatchImport = async () => {
     console.error('批次匯入時發生錯誤:', error)
     ElMessage.error('批次匯入時發生錯誤')
   }
+}
+
+// 批次更新Registry密碼相關函數
+const showBatchUpdateDialog = () => {
+  batchUpdateDialogVisible.value = true
+}
+
+const batchUpdatePasswords = () => {
+  if (!batchUpdateEnv.value || !batchUpdatePassword.value) {
+    ElMessage.warning('請選擇環境並輸入新密碼')
+    return
+  }
+
+  let updatedCount = 0
+  const projectsToUpdate = [...projects.value]
+
+  projectsToUpdate.forEach((project) => {
+    initializeDockerLogin(project)
+    
+    // 檢查該專案在此環境是否有Registry設定
+    if (project.dockerLogin[batchUpdateEnv.value]) {
+      project.dockerLogin[batchUpdateEnv.value].password = batchUpdatePassword.value
+      updatedCount++
+    }
+  })
+
+  // 更新配置
+  config.set('projects', projectsToUpdate)
+  config.save()
+  projects.value = projectsToUpdate
+
+  ElMessage.success(`成功更新 ${updatedCount} 個專案在 ${batchUpdateEnv.value} 環境的Registry密碼`)
+  
+  // 清空輸入
+  batchUpdateEnv.value = ''
+  batchUpdatePassword.value = ''
+}
+
+const batchUpdateAllPasswords = () => {
+  if (!batchUpdatePassword.value) {
+    ElMessage.warning('請輸入新密碼')
+    return
+  }
+
+  let updatedCount = 0
+  const projectsToUpdate = [...projects.value]
+  const envs = environments.value
+
+  projectsToUpdate.forEach((project) => {
+    initializeDockerLogin(project)
+    
+    envs.forEach((env) => {
+      // 檢查該專案在此環境是否有Registry設定
+      if (project.dockerLogin[env]) {
+        project.dockerLogin[env].password = batchUpdatePassword.value
+        updatedCount++
+      }
+    })
+  })
+
+  // 更新配置
+  config.set('projects', projectsToUpdate)
+  config.save()
+  projects.value = projectsToUpdate
+
+  ElMessage.success(`成功更新 ${updatedCount} 個Registry密碼設定`)
+  
+  // 關閉對話框並清空輸入
+  batchUpdateDialogVisible.value = false
+  batchUpdatePassword.value = ''
 }
 
 watch(selectedProject, (newProject) => {
@@ -597,6 +752,22 @@ watch(selectedProject, (newProject) => {
 
 .dialog-footer .el-button {
   min-width: 100px;
+}
+
+.batch-update-section {
+  margin-bottom: 24px;
+}
+
+.batch-update-card {
+  background-color: var(--el-bg-color-page);
+  border: 1px solid var(--el-color-primary-light-7);
+  border-radius: 8px;
+}
+
+.batch-update-card :deep(.el-card__header) {
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
