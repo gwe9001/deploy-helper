@@ -6,6 +6,7 @@ import { enable, initialize } from '@electron/remote/main'
 import log from 'electron-log/main'
 import { updateElectronApp } from 'update-electron-app'
 import { setupIpcHandlers } from './ipcHandlers'
+import fs from 'fs'
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
 declare const MAIN_WINDOW_VITE_NAME: string
@@ -29,6 +30,28 @@ log.info('Log from the main process')
 
 let mainWindow: BrowserWindow
 
+// 讀取 Nuxt 實際端口的函數
+function getNuxtPort(): number {
+  try {
+    const portFile = path.join(process.cwd(), '.nuxt-port')
+    if (fs.existsSync(portFile)) {
+      const content = fs.readFileSync(portFile, 'utf8')
+      const match = content.match(/NUXT_PORT=(\d+)/)
+      if (match) {
+        const port = parseInt(match[1])
+        log.info(`從檔案讀取到 Nuxt 端口: ${port}`)
+        return port
+      }
+    }
+  } catch (error) {
+    log.warn('無法讀取 Nuxt 端口檔案:', error)
+  }
+  
+  // 回退到預設端口
+  log.info('使用預設 Nuxt 端口: 3000')
+  return 3000
+}
+
 const createWindow = () => {
   const primaryDisplay = screen.getPrimaryDisplay()
   const { width, height } = primaryDisplay.workAreaSize
@@ -47,8 +70,11 @@ const createWindow = () => {
 
   // 開發模式使用 Nuxt dev server
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    // 開發時指向 Nuxt dev server (port 3000)
-    mainWindow.loadURL('http://localhost:3000')
+    // 開發時動態獲取 Nuxt dev server 端口
+    const nuxtPort = getNuxtPort()
+    const nuxtUrl = `http://localhost:${nuxtPort}`
+    log.info(`載入 Nuxt 應用程式: ${nuxtUrl}`)
+    mainWindow.loadURL(nuxtUrl)
   } else {
     // 生產模式載入建置後的檔案
     mainWindow.loadFile(
@@ -65,6 +91,20 @@ const createWindow = () => {
   if (isDev) {
     mainWindow.webContents.openDevTools()
   }
+
+  // 處理窗口焦點事件，確保內容更新不受焦點影響
+  mainWindow.on('focus', () => {
+    log.info('Window focused')
+  })
+
+  mainWindow.on('blur', () => {
+    log.info('Window blurred')
+  })
+
+  // 確保窗口狀態變化時保持通訊暢通
+  mainWindow.webContents.on('dom-ready', () => {
+    log.info('DOM ready, window is ready to receive messages')
+  })
 }
 
 app.whenReady().then(() => {

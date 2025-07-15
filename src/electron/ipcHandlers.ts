@@ -55,6 +55,7 @@ async function executeCommandStream(
   args: string[],
   directory: string,
   shell: string,
+  targetWindow?: BrowserWindow,
 ): Promise<void> {
   let shellPath: string
   if (shell === 'powershell') {
@@ -76,25 +77,22 @@ async function executeCommandStream(
     })
 
     process.stdout.on('data', (data) => {
-      BrowserWindow.getFocusedWindow()?.webContents.send(
-        COMMAND_OUTPUT,
-        data.toString(),
-      )
+      // 優先使用傳入的目標窗口，否則獲取主窗口或焦點窗口
+      const window = targetWindow || BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]
+      window?.webContents.send(COMMAND_OUTPUT, data.toString())
     })
 
     process.stderr.on('data', (data) => {
-      BrowserWindow.getFocusedWindow()?.webContents.send(
-        COMMAND_ERROR,
-        data.toString(),
-      )
+      // 優先使用傳入的目標窗口，否則獲取主窗口或焦點窗口
+      const window = targetWindow || BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]
+      window?.webContents.send(COMMAND_ERROR, data.toString())
     })
 
     process.on('close', (code) => {
       if (code === 0) {
-        BrowserWindow.getFocusedWindow()?.webContents.send(
-          COMMAND_OUTPUT,
-          'Command completed successfully\n',
-        )
+        // 優先使用傳入的目標窗口，否則獲取主窗口或焦點窗口
+        const window = targetWindow || BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]
+        window?.webContents.send(COMMAND_OUTPUT, 'Command completed successfully\n')
         resolve()
       } else {
         reject(new Error(`Command exited with code ${code}`))
@@ -160,7 +158,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
     'execute-command-stream',
     async (event, command, args, directory, shell) => {
       try {
-        await executeCommandStream(command, args, directory, shell)
+        // 傳遞主窗口作為目標窗口
+        await executeCommandStream(command, args, directory, shell, mainWindow)
         return 'Command completed successfully'
       } catch (error) {
         log.error('Error:', error)
