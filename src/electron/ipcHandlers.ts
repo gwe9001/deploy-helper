@@ -219,4 +219,22 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.on('close-window', () => {
     mainWindow.close()
   })
+
+  // 新增：獲取視窗狀態
+  ipcMain.handle('get-window-state', () => {
+    return {
+      isMaximized: mainWindow.isMaximized(),
+      isMinimized: mainWindow.isMinimized(),
+      isFullScreen: mainWindow.isFullScreen()
+    }
+  })
+
+  // 新增：監聽視窗最大化/還原事件並通知渲染程序
+  mainWindow.on('maximize', () => {
+    mainWindow.webContents.send('window-maximized')
+  })
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow.webContents.send('window-unmaximized')
+  })
 }
