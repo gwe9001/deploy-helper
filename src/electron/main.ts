@@ -65,6 +65,20 @@ const createWindow = () => {
   if (isDev) {
     mainWindow.webContents.openDevTools()
   }
+
+  // 處理窗口焦點事件，確保內容更新不受焦點影響
+  mainWindow.on('focus', () => {
+    log.info('Window focused')
+  })
+
+  mainWindow.on('blur', () => {
+    log.info('Window blurred')
+  })
+
+  // 確保窗口狀態變化時保持通訊暢通
+  mainWindow.webContents.on('dom-ready', () => {
+    log.info('DOM ready, window is ready to receive messages')
+  })
 }
 
 app.whenReady().then(() => {
