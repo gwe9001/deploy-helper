@@ -14,6 +14,6 @@ export default defineConfig({
   },
   // 開發伺服器配置，避免與 Nuxt dev server 衝突
   server: {
-    port: 3001, // 避免與 Nuxt 的預設 port 3000 衝突
+    port: 0, // 避免與 Nuxt 的預設 port 3000 衝突
   },
 })
