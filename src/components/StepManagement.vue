@@ -232,6 +232,62 @@
             <el-option label="PowerShell" value="powershell" />
           </el-select>
         </el-form-item>
+
+        <el-form-item>
+          <template #label>
+            <div class="tooltip-label">
+              <span>環境特定參數</span>
+              <el-tooltip
+                content="設定此步驟在特定環境下的參數"
+                placement="top"
+              >
+                <el-icon class="tooltip-icon"><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="step-switch">
+            <el-switch v-model="editingStep.hasEnvSpecificParams" />
+            <div v-if="editingStep.hasEnvSpecificParams">
+              <el-form-item
+                v-for="(param, index) in editingStep.envSpecificParams"
+                :key="index"
+                label="參數"
+              >
+                <el-input
+                  v-model="param.key"
+                  placeholder="參數名稱"
+                  class="param-input"
+                />
+                <el-input
+                  v-model="param.value"
+                  placeholder="參數值"
+                  class="param-input"
+                />
+                <el-select
+                  v-model="param.environment"
+                  placeholder="選擇環境"
+                  class="param-select"
+                >
+                  <el-option
+                    v-for="env in environments"
+                    :key="env"
+                    :label="env"
+                    :value="env"
+                  />
+                </el-select>
+                <el-button
+                  @click="removeEnvSpecificParam(index)"
+                  type="danger"
+                  icon="el-icon-delete"
+                  circle
+                />
+              </el-form-item>
+              <el-button @click="addEnvSpecificParam" type="primary"
+                >新增參數</el-button
+              >
+            </div>
+          </div>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -254,6 +310,7 @@ import { Step } from '../config'
 const steps = ref<Step[]>([])
 const dialogVisible = ref(false)
 const editingStep = ref<Step | null>(null)
+const environments = computed(() => config.value().environments)
 
 onMounted(() => {
   steps.value = config.value().steps
@@ -278,6 +335,8 @@ const addStep = () => {
     hasOutputReference: false,
     hasDirectory: false,
     shellType: 'bash',
+    hasEnvSpecificParams: false,
+    envSpecificParams: [],
   }
   dialogVisible.value = true
 }
@@ -346,6 +405,25 @@ const getPreviousOutputs = (currentStep: Step) => {
     }
   }
   return outputs
+}
+
+const addEnvSpecificParam = () => {
+  if (editingStep.value) {
+    if (!editingStep.value.envSpecificParams) {
+      editingStep.value.envSpecificParams = []
+    }
+    editingStep.value.envSpecificParams.push({
+      key: '',
+      value: '',
+      environment: '',
+    })
+  }
+}
+
+const removeEnvSpecificParam = (index: number) => {
+  if (editingStep.value) {
+    editingStep.value.envSpecificParams.splice(index, 1)
+  }
 }
 </script>
 
@@ -495,6 +573,14 @@ const getPreviousOutputs = (currentStep: Step) => {
   gap: 16px;
   padding-top: 24px;
   border-top: 1px solid var(--border-color);
+}
+
+.param-input {
+  margin-bottom: 8px;
+}
+
+.param-select {
+  margin-bottom: 8px;
 }
 
 @media (max-width: 768px) {
